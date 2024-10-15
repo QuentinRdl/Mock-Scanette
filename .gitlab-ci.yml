@@ -1,22 +1,21 @@
 image: maven:latest
-    
-    stages:
-      - build
-      - test
-    
-    variables:
-      MAVEN_CLI_OPTS: "--batch-mode"
-      MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
-    
-    build:
-      stage: build
-      script:
-        - mvn $MAVEN_CLI_OPTS compile
-    
-    test:
-      stage: test
-      script:
-        - mvn $MAVEN_CLI_OPTS test
-        - cat target/site/jacoco/index.html
-      coverage: '/Total.*?([0-9]{1,3})%/'
-    
+
+stages:
+  - build
+  - test
+
+variables:
+  MAVEN_CLI_OPTS: "--batch-mode"
+  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
+
+build:
+  stage: build
+  script:
+    - mvn $MAVEN_CLI_OPTS compile
+
+test:
+  stage: test
+  script:
+    - mvn $MAVEN_CLI_OPTS test
+    - cat target/site/jacoco/index.html
+  coverage: '/Total.*?([0-9]{1,3})%/'
