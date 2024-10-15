@@ -16,6 +16,12 @@ public class TestArticle {
     Article isNotValid4;
     Article eanKey0;
     Article eanWithLeadingZeros;
+
+
+
+    private Article b;
+    private Article c;
+    private Article d;
     @Before     // indicates that the method should be executed before each test
     public void setup() {
         // creation of an object to test
@@ -26,6 +32,14 @@ public class TestArticle {
         isNotValid4 = createArticle(9789059605839l, 1.3, "Pas pareil");
         eanKey0 = createArticle(9799059605839l, 12, "Fruits");
         eanWithLeadingZeros = createArticle(0000001234567l, 10.0, "Article avec zéros en début");
+
+        /* =================== Test Theo Delaroche =================*/
+        // creation of an object to test
+        a = new Article(9789059605831L, 1.3, "Cahier 72 pages");
+        // creation d'un objet qui comporte des valeurs fausses to test
+        b = new Article(1789059605831L, 2.8, "Livre annexe");
+        c = new Article(9789059605831L, 1.3, "Cahier 72 pages");
+        d = new Article(1300000000000L, 7.5, "Presse-papier");
     }
 
     public Article createArticle(long ean, double price, String name) {
@@ -121,4 +135,67 @@ public class TestArticle {
         Assert.assertEquals(articleToTest.hashCode(), a.hashCode());
         Assert.assertNotEquals(a.hashCode(), isNotValid.hashCode());
     }
+
+    /* =================== Test Theo Delaroche =================*/
+
+    @Test   // indicates that this method is a test case
+    public void testNameTrue() {
+        // an observation that will obviously succeed
+        Assert.assertNotNull(a);
+        // an observation that will cause the test to fail:
+        Assert.assertEquals("Cahier 72 pages", a.getNom());
+    }
+
+    @Test
+    public void testNameFalse() {
+        Assert.assertNotNull(b);
+        Assert.assertNotEquals("Livres annexe", b.getNom());
+    }
+
+    @Test
+    public void testPriceTrue() {
+        Assert.assertNotNull(a);
+        Assert.assertEquals(1.3, a.getPrixUnitaire(), 0);
+    }
+
+    @Test
+    public void testPriceFalse() {
+        Assert.assertNotNull(b);
+        Assert.assertNotEquals(1, b.getPrixUnitaire());
+    }
+
+    @Test
+    public void testEan13True() {
+        Assert.assertNotNull(a);
+        Assert.assertEquals(9789059605831L, a.getEAN13(), 0);
+        Assert.assertTrue(a.isValidEAN13());
+        // Test du cas ou la clé de contrôle est égale a 0
+        Assert.assertNotNull(d);
+        Assert.assertTrue(d.isValidEAN13());
+    }
+
+    @Test
+    public void testEan13False() {
+        Assert.assertNotNull(b);
+        Assert.assertFalse(b.isValidEAN13());
+    }
+
+    @Test
+    public void testEqualsTDelaro() {
+        Assert.assertNotNull(a);
+        Assert.assertNotNull(b);
+        Assert.assertFalse(a.equals(b));
+        Assert.assertTrue(a.equals(c));
+        Assert.assertFalse(a.equals(13));
+    }
+
+    @Test
+    public void testHashcode() {
+        Assert.assertNotNull(a);
+        Assert.assertNotNull(c);
+        Assert.assertEquals(a.hashCode(), c.hashCode());
+
+    }
+
 }
+

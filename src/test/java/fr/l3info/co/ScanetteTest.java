@@ -399,4 +399,8 @@ public class ScanetteTest {
         Set<Article> theSet = scan.getArticles();
         assertEquals(2, theSet.size());
     }
+
+
+    /* =================== Test Theo Delaroche =================*/
+
 }
