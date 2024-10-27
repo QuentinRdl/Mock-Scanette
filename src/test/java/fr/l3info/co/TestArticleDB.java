@@ -13,6 +13,8 @@ public class TestArticleDB {
 
     ArticleDB produits = new ArticleDB();
     ArticleDB voidProduits = new ArticleDB();
+    ArticleDB db;
+
 
     // Path to the csv files
 
@@ -22,6 +24,7 @@ public class TestArticleDB {
     public void setup() throws FileFormatException {
         produits.init(new File(pathProduits));
         voidProduits.init(new File(pathVoidProduits));
+        db = new ArticleDB();
     }
 
     public boolean fileExists(String path) {
@@ -82,4 +85,106 @@ public class TestArticleDB {
         Article notFound = produits.getArticle(-2);
         Assert.assertTrue(notFound == null);
     }
+
+    /* =================== Test Quentin Payet =================*/
+
+
+    @Test
+    public void testLectureFichierExistantQuentin() throws FileFormatException {
+        Assert.assertTrue(db != null);
+        db.init(new File("target/classes/csv/produits.csv"));
+    }
+
+    @Test(expected=FileFormatException.class)
+    public void testLectureFichierInexistantQuentin() throws FileFormatException {
+        Assert.assertTrue(db != null);
+        db.init(new File("target/classes/csv/fichierInexistant.csv"));
+    }
+
+    @Test(expected = FileFormatException.class)
+    public void testLectureFichierAttributManquant() throws FileFormatException {
+        Assert.assertTrue(db != null);
+        db.init(new File("target/classes/csv/fichierErreur.csv"));
+        Assert.assertEquals(0, db.getTailleDB());
+    }
+
+    @Test
+    public void testLectureFichierVide() throws FileFormatException {
+        Assert.assertTrue(db != null);
+        db.init(new File("target/classes/csv/fichierVide.csv"));
+        Assert.assertEquals(0, db.getTailleDB());
+    }
+
+    @Test(expected = FileFormatException.class)
+    public void testLectureFichierAttributEnTrop() throws FileFormatException {
+        Assert.assertTrue(db != null);
+        db.init(new File("target/classes/csv/FichierErreurAttributEnTrop.csv"));
+        Assert.assertEquals(0, db.getTailleDB());
+    }
+
+    @Test(expected = FileFormatException.class)
+    public void testLectureFichierAttributEan13NonValide() throws FileFormatException {
+        Assert.assertTrue(db != null);
+        db.init(new File("target/classes/csv/fichierErreurAttributEan13.csv"));
+        Assert.assertEquals(0, db.getTailleDB());
+    }
+
+    @Test(expected = FileFormatException.class)
+    public void testLectureFichierAttributPrix() throws FileFormatException {
+        Assert.assertTrue(db != null);
+        db.init(new File("target/classes/csv/fichierErreurAttributPrixUnitaire.csv"));
+        Assert.assertEquals(0, db.getTailleDB());
+    }
+
+    @Test(expected = FileFormatException.class)
+    public void testLectureFichierAttributNom() throws FileFormatException {
+        Assert.assertTrue(db != null);
+        db.init(new File("target/classes/csv/fichierErreurAttributNom.csv"));
+        Assert.assertEquals(0, db.getTailleDB());
+    }
+
+    @Test(expected = FileFormatException.class)
+    public void testFormatFile() throws FileFormatException {
+        Assert.assertTrue(db != null);
+        db.init(new File("target/classes/csv/produitsTxt.txt"));
+        Assert.assertEquals(0, db.getTailleDB());
+    }
+
+
+    @Test
+    public void testGetTailleInitDB() throws FileFormatException {
+        Assert.assertTrue(db != null);
+
+        db.init(new File("target/classes/csv/produits.csv"));
+        Assert.assertEquals(db.getTailleDB(), 17);
+    }
+
+    @Test
+    public void testGetTailleNotInitDB() {
+        Assert.assertTrue(db != null);
+        Assert.assertEquals(0, db.getTailleDB());
+    }
+
+    @Test
+    public void testGetExistingArticle() throws FileFormatException{
+        Assert.assertTrue(db != null);
+        db.init(new File("target/classes/csv/produits.csv"));
+
+        Article a = new Article(5410188006711l, 2.15, "Tropicana Tonic Breakfast");
+        Assert.assertTrue(a != null);
+
+        Assert.assertTrue(db.getArticle(5410188006711l).equals(a));
+    }
+
+    @Test
+    public void testGetNotExistingArticle() throws FileFormatException{
+        Assert.assertTrue(db != null);
+        db.init(new File("target/classes/csv/produits.csv"));
+
+        Assert.assertEquals(null, db.getArticle(000l));
+    }
+
+
 }
+
+

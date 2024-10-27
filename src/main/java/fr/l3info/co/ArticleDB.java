@@ -19,22 +19,39 @@ public class ArticleDB {
     public void init(File initFile) throws FileFormatException {
 
         try {
+
+            if (!initFile.getName().endsWith(".csv")) {
+                throw  new FileFormatException(initFile);
+            }
+
             FileReader reader = new FileReader(initFile);
             BufferedReader br = new BufferedReader(reader);
             String line;
             while ((line = br.readLine()) != null) {
                 // TODO: compléter l'initialisation des articles à partir d'un fichier
                 String[] theLine = line.split(",");
+
+                if (theLine.length != 3) {
+                    throw new FileFormatException(initFile);
+                }
+
                 Article articleToWrite = new Article(Long.parseLong(theLine[0]), Double.parseDouble(theLine[1]), theLine[2]);
+
+                if ((!articleToWrite.isValidEAN13()) || articleToWrite.getPrixUnitaire() < 0 || articleToWrite.getNom().trim().isEmpty()) {
+                    throw  new FileFormatException(initFile);
+                }
+
                 theHashMap.put(articleToWrite.getEAN13(), articleToWrite);
             }
         }
         catch (Exception e) {
+            theHashMap.clear();
             throw new FileFormatException(initFile);
         }
     }
 
     public Article getArticle(long ean13) {
+        if (theHashMap.get(ean13) == null) return null;
         return theHashMap.get(ean13);
     }
 

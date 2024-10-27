@@ -9,6 +9,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.Assert;
+
 
 // JUnit
 import org.junit.runner.RunWith;
@@ -35,12 +37,22 @@ public class TestCaisse {
 
     Scanette mockScan;
 
+    private MaCaisse c;
+    private ArticleDB db;
+    private Scanette sc;
+
     @Before
     public void setup() throws FileFormatException {
         articleProduits.init(new File(pathArticleProduits));
         articleVoidProduits.init(new File(pathArticleVoidProduits));
 
         mockScan = Mockito.spy(new Scanette(articleProduits));
+
+        db = new ArticleDB();
+        db.init(new File("target/classes/csv/produits.csv"));
+        sc = new Scanette(db);
+        c = new MaCaisse(db);
+        Assert.assertNotEquals(null, c);
     }
 
     @Test
@@ -498,6 +510,548 @@ public class TestCaisse {
         ╚═╝   ╚══════╝╚══════╝   ╚═╝          ╚═╝   ╚═╝  ╚═╝╚══════╝ ╚═════╝     ╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝  ╚═════╝╚═╝  ╚═╝╚══════╝
      */
 
+
+
+
+
+    /* =================== Test Quentin Payet =================*/
+
+
+ 
+ 
+     @Test
+     public void testConnexionEtatAttenteScannetteVide() {
+         Assert.assertEquals(0, c.connexion(sc));
+     }
+ 
+     @Test
+     public void testConnexionEtatAttenteScannetteNonVide() {
+ 
+         Set<Article> s = new HashSet<Article>();
+         s.add(db.getArticle(3560070048786l));
+ 
+         Scanette mockScannette = Mockito.mock(Scanette.class);
+         Mockito.when(mockScannette.getArticles()).thenReturn(s);
+         Mockito.when(mockScannette.relectureEffectuee()).thenReturn(true);
+ 
+         Assert.assertEquals(0, c.connexion(mockScannette));
+     }
+ 
+     @Test
+     public void testConnexionEtatAttenteScannetteGetReferenceInconnuNonVide() {
+ 
+         // Code inconnues
+         Set<Long> s = new HashSet<Long>();
+         s.add(4463487097622l);
+         s.add(2123201259812l);
+         s.add(1190623242310l);
+ 
+         Scanette mockScannette = Mockito.mock(Scanette.class);
+         Mockito.when(mockScannette.getReferencesInconnues()).thenReturn(s);
+         Mockito.when(mockScannette.relectureEffectuee()).thenReturn(true);
+ 
+         Assert.assertEquals(0, c.connexion(mockScannette));
+     }
+ 
+     @Test
+     public void testConnexionScannetteInexistante() {
+         Assert.assertEquals(-1, c.connexion(null));
+     }
+ 
+ 
+     @Test
+     public void testConnexionDemandeRelectureFaux() {
+ 
+         // instanciation du mock
+         Scanette mockScannette = Mockito.mock(Scanette.class);
+         Mockito.when(mockScannette.relectureEffectuee()).thenReturn(false);
+ 
+         Set<Article> s = new HashSet<Article>();
+         s.add(db.getArticle(3560070048786l));
+         Mockito.when(mockScannette.getArticles()).thenReturn(s);
+         Mockito.when(mockScannette.relectureEffectuee()).thenReturn(true);
+ 
+ 
+         // instanciaton du spy
+         MaCaisse spyMaCaisse = Mockito.spy(new MaCaisse(db));
+         Mockito.when(spyMaCaisse.demandeRelecture()).thenReturn(false);
+ 
+         Assert.assertEquals(0, spyMaCaisse.connexion(mockScannette));
+ 
+     }
+ 
+     @Test
+     public void testConnexionDemandeRelectureVrai() {
+ 
+         // instanciation du mock
+         Scanette mockScannette = Mockito.mock(Scanette.class);
+         Mockito.when(mockScannette.relectureEffectuee()).thenReturn(false);
+ 
+         Set<Article> s = new HashSet<Article>();
+         s.add(db.getArticle(3560070048786l));
+         Mockito.when(mockScannette.getArticles()).thenReturn(s);
+ 
+         // instanciaton du spy
+         MaCaisse spyMaCaisse = Mockito.spy(new MaCaisse(db));
+         Mockito.when(spyMaCaisse.demandeRelecture()).thenReturn(true);
+ 
+         Assert.assertEquals(1, spyMaCaisse.connexion(mockScannette));
+     }
+ 
+     @Test
+     public  void testConnexionEtatPaiement() {
+         Set<Article> s = new HashSet<Article>();
+         s.add(db.getArticle(3017620402678l));
+         s.add(db.getArticle(3560071097424l));
+ 
+         Scanette mockScannette = Mockito.mock(Scanette.class);
+         Mockito.when(mockScannette.getArticles()).thenReturn(s);
+         Mockito.when(mockScannette.quantite(3017620402678l)).thenReturn(1);
+         Mockito.when(mockScannette.quantite(3017620402678l)).thenReturn(1);
+         Mockito.when(mockScannette.relectureEffectuee()).thenReturn(true);
+         c.connexion(mockScannette);
+         Assert.assertEquals(-1,c.connexion(mockScannette));
+ 
+     }
+ 
+     @Test
+     public  void testConnexionEtatPaiementAttenteCaissier() {
+ 
+         // Code inconnues
+         Set<Long> s = new HashSet<Long>();
+         s.add(4463487097622l);
+         s.add(2123201259812l);
+         s.add(1190623242310l);
+ 
+         Scanette mockScannette = Mockito.mock(Scanette.class);
+         Mockito.when(mockScannette.getReferencesInconnues()).thenReturn(s);
+         Mockito.when(mockScannette.relectureEffectuee()).thenReturn(true);
+         c.connexion(mockScannette);
+         Assert.assertEquals(-1,c.connexion(mockScannette));
+     }
+ 
+     @Test
+     public  void testConnexionEtatAuthentifier() {
+ // Code inconnues
+         Set<Long> s = new HashSet<Long>();
+         s.add(4463487097622l);
+         s.add(2123201259812l);
+         s.add(1190623242310l);
+ 
+         Scanette mockScannette = Mockito.mock(Scanette.class);
+         Mockito.when(mockScannette.getReferencesInconnues()).thenReturn(s);
+         Mockito.when(mockScannette.relectureEffectuee()).thenReturn(true);
+         c.connexion(mockScannette);
+         c.ouvrirSession();
+         Assert.assertEquals(-1,c.connexion(mockScannette));
+     }
+ 
+ 
+     @Test
+     public  void testAbandonQuentin() {
+         c.abandon();
+         Assert.assertEquals(0, c.connexion(sc));
+     }
+ 
+     @Test
+     public  void testPayerEtatCaissePayementAvecRendu() {
+ 
+         Set<Article> s = new HashSet<Article>();
+         s.add(db.getArticle(3017620402678l));
+         s.add(db.getArticle(3560071097424l));
+ 
+         Scanette mockScannette = Mockito.mock(Scanette.class);
+         Mockito.when(mockScannette.getArticles()).thenReturn(s);
+         Mockito.when(mockScannette.quantite(3017620402678l)).thenReturn(1);
+         Mockito.when(mockScannette.quantite(3017620402678l)).thenReturn(1);
+         Mockito.when(mockScannette.relectureEffectuee()).thenReturn(true);
+ 
+ 
+         c.connexion(mockScannette);
+         Assert.assertTrue(c.payer(10) > 0);
+     }
+ 
+ 
+ 
+     @Test
+     public  void testPayerEtatCaissePayementSansRendu() {
+ 
+         Set<Article> s = new HashSet<Article>();
+         s.add(db.getArticle(3017620402678l));
+         s.add(db.getArticle(3560071097424l));
+ 
+         Scanette mockScannette = Mockito.mock(Scanette.class);
+ 
+         Mockito.when(mockScannette.getArticles()).thenReturn(s);
+         Mockito.when(mockScannette.quantite(3017620402678l)).thenReturn(1);
+         Mockito.when(mockScannette.quantite(3017620402678l)).thenReturn(1);
+         Mockito.when(mockScannette.relectureEffectuee()).thenReturn(true);
+ 
+ 
+         c.connexion(mockScannette);
+         Assert.assertTrue( c.payer(1.86) == 0);
+     }
+ 
+     @Test
+     public  void testPayerPanierVide() {
+ 
+         Set<Article> s = new HashSet<Article>();
+         Scanette mockScannette = Mockito.mock(Scanette.class);
+ 
+         Mockito.when(mockScannette.getArticles()).thenReturn(s);
+ 
+ 
+ 
+         c.connexion(mockScannette);
+         Assert.assertEquals(-42, c.payer(1.86), 0.0);
+     }
+ 
+     @Test
+     public  void testPayerEtatCaissePayementErreur() {
+ 
+         Set<Article> s = new HashSet<Article>();
+         s.add(db.getArticle(3017620402678l));
+         s.add(db.getArticle(3560071097424l));
+ 
+         Scanette mockScannette = Mockito.mock(Scanette.class);
+ 
+         Mockito.when(mockScannette.getArticles()).thenReturn(s);
+         Mockito.when(mockScannette.quantite(3017620402678l)).thenReturn(1);
+         Mockito.when(mockScannette.quantite(3560071097424l)).thenReturn(1);
+         Mockito.when(mockScannette.relectureEffectuee()).thenReturn(true);
+ 
+         c.connexion(mockScannette);
+         Assert.assertTrue( c.payer(1) < 0.0);
+     }
+ 
+ 
+ 
+     @Test
+     public  void testOuvrirSessionEtatCaissePayement() {
+ 
+         Set<Article> s = new HashSet<Article>();
+         s.add(db.getArticle(3017620402678l));
+         s.add(db.getArticle(3560071097424l));
+ 
+         Scanette mockScannette = Mockito.mock(Scanette.class);
+         Mockito.when(mockScannette.getArticles()).thenReturn(s);
+         Mockito.when(mockScannette.relectureEffectuee()).thenReturn(true);
+ 
+ 
+ 
+ 
+         c.connexion(mockScannette);
+         Assert.assertEquals(0, c.ouvrirSession());
+     }
+ 
+     @Test
+     public  void testOuvrirSessionEtatAttenteCaissier() {
+ 
+ 
+         // Code inconnues
+         Set<Long> s = new HashSet<Long>();
+         s.add(4463487097622l);
+         s.add(2123201259812l);
+         s.add(1190623242310l);
+ 
+         Scanette mockScannette = Mockito.mock(Scanette.class);
+         Mockito.when(mockScannette.getReferencesInconnues()).thenReturn(s);
+         Mockito.when(mockScannette.relectureEffectuee()).thenReturn(true);
+ 
+         c.connexion(mockScannette);
+ 
+         Assert.assertEquals(0, c.ouvrirSession());
+     }
+ 
+ 
+     @Test
+     public  void testOuvrirSessionEtatEnAttente() {
+         Assert.assertEquals(-1, c.ouvrirSession());
+     }
+ 
+     @Test
+     public  void testOuvrirSessionDejaOuverteEtatAuthentifie() {
+         // Code inconnues
+         Set<Long> s = new HashSet<Long>();
+         s.add(4463487097622l);
+         s.add(2123201259812l);
+         s.add(1190623242310l);
+ 
+         Scanette mockScannette = Mockito.mock(Scanette.class);
+         Mockito.when(mockScannette.getReferencesInconnues()).thenReturn(s);
+ 
+         Mockito.when(mockScannette.relectureEffectuee()).thenReturn(true);
+ 
+         c.connexion(mockScannette);
+         Assert.assertEquals(0, c.ouvrirSession());
+         Assert.assertEquals(-1, c.ouvrirSession());
+     }
+ 
+ 
+     @Test
+     public  void testFermerSessionCaissierAuthentifiéPanierNonVide() {
+ 
+         Set<Article> s = new HashSet<Article>();
+         s.add(db.getArticle(3017620402678l));
+         s.add(db.getArticle(3560071097424l));
+ 
+         Scanette mockScannette = Mockito.mock(Scanette.class);
+         Mockito.when(mockScannette.getArticles()).thenReturn(s);
+         Mockito.when(mockScannette.quantite(3560071097424l)).thenReturn(1);
+         Mockito.when(mockScannette.quantite(3017620402678l)).thenReturn(1);
+         Mockito.when(mockScannette.relectureEffectuee()).thenReturn(true);
+ 
+ 
+ 
+         c.connexion(mockScannette);
+         c.ouvrirSession();
+         Assert.assertEquals(0, c.fermerSession());
+     }
+ 
+     @Test
+     public  void testFermerSessionCaissierAuthentifiéPanierVide() {
+         // Code inconnues
+         Set<Long> s = new HashSet<Long>();
+         s.add(4463487097622l);
+         s.add(2123201259812l);
+         s.add(1190623242310l);
+ 
+         Scanette mockScannette = Mockito.mock(Scanette.class);
+         Mockito.when(mockScannette.getReferencesInconnues()).thenReturn(s);
+         Mockito.when(mockScannette.relectureEffectuee()).thenReturn(true);
+ 
+ 
+         c.connexion(mockScannette);
+         c.ouvrirSession();
+         Assert.assertEquals(0, c.fermerSession());
+     }
+ 
+ 
+     @Test
+     public  void testFermerSessionCaissierNonOuverteEtatEnAttente() {
+         Assert.assertEquals(-1, c.fermerSession());
+     }
+ 
+     @Test
+     public  void testFermerSessionCaissierNonOuverteEtatAttenteCaissier() {
+         // Code inconnues
+         Set<Long> s = new HashSet<Long>();
+         s.add(4463487097622l);
+         s.add(2123201259812l);
+         s.add(1190623242310l);
+ 
+         Scanette mockScannette = Mockito.mock(Scanette.class);
+         Mockito.when(mockScannette.getReferencesInconnues()).thenReturn(s);
+         Mockito.when(mockScannette.relectureEffectuee()).thenReturn(true);
+ 
+ 
+ 
+         c.connexion(mockScannette);
+         Assert.assertEquals(-1, c.fermerSession());
+     }
+ 
+     @Test
+     public  void testFermerSessionCaissierNonOuverteEtatPayement() {
+         Set<Article> s = new HashSet<Article>();
+         s.add(db.getArticle(3017620402678l));
+         s.add(db.getArticle(3560071097424l));
+ 
+         Scanette mockScannette = Mockito.mock(Scanette.class);
+         Mockito.when(mockScannette.getArticles()).thenReturn(s);
+         Mockito.when(mockScannette.relectureEffectuee()).thenReturn(true);
+ 
+ 
+ 
+         c.connexion(mockScannette);
+         Assert.assertEquals(-1, c.fermerSession());
+     }
+ 
+     @Test
+     public  void testScannerNonAuthentifierEtatEnAttente() {
+         Assert.assertEquals(-1, c.scanner(3017800238592l));
+     }
+ 
+     @Test
+     public  void testScannerNonAuthentifierAttenteCaissier() {
+         // Code inconnues
+         Set<Long> s = new HashSet<Long>();
+         s.add(4463487097622l);
+         s.add(2123201259812l);
+         s.add(1190623242310l);
+ 
+         Scanette mockScannette = Mockito.mock(Scanette.class);
+         Mockito.when(mockScannette.getReferencesInconnues()).thenReturn(s);
+         Mockito.when(mockScannette.relectureEffectuee()).thenReturn(true);
+ 
+ 
+ 
+         c.connexion(mockScannette);
+         Assert.assertEquals(-1, c.scanner(3017800238592l));
+     }
+ 
+ 
+     @Test
+     public  void testScannerNonAuthentifierEtatPayement() {
+         Set<Article> s = new HashSet<Article>();
+         s.add(db.getArticle(3560070048786l));
+ 
+         Scanette mockScannette = Mockito.mock(Scanette.class);
+         Mockito.when(mockScannette.relectureEffectuee()).thenReturn(true);
+         Mockito.when(mockScannette.getArticles()).thenReturn(s);
+ 
+         c.connexion(mockScannette);
+         Assert.assertEquals(-1, c.scanner(3017800238592l));
+     }
+ 
+ 
+     @Test
+     public  void testScannerArticleNUll() {
+         Set<Article> s = new HashSet<Article>();
+         s.add(db.getArticle(3017620402678l));
+         s.add(db.getArticle(3560071097424l));
+ 
+         Scanette mockScannette = Mockito.mock(Scanette.class);
+         Mockito.when(mockScannette.getArticles()).thenReturn(s);
+         Mockito.when(mockScannette.quantite(3017620402678l)).thenReturn(1);
+         Mockito.when(mockScannette.quantite(3560071097424l)).thenReturn(1);
+         Mockito.when(mockScannette.relectureEffectuee()).thenReturn(true);
+ 
+ 
+         c.connexion(mockScannette);
+         c.ouvrirSession();
+         Assert.assertEquals(-2,c.scanner(71097424l));
+     }
+ 
+     @Test
+     public  void testScannerAuthentifierNouvelArticle() {
+         Set<Article> s = new HashSet<Article>();
+         s.add(db.getArticle(3017620402678l));
+ 
+         Scanette mockScannette = Mockito.mock(Scanette.class);
+         Mockito.when(mockScannette.getArticles()).thenReturn(s);
+         Mockito.when(mockScannette.quantite(3017620402678l)).thenReturn(1);
+         Mockito.when(mockScannette.relectureEffectuee()).thenReturn(true);
+ 
+         c.connexion(mockScannette);
+         c.ouvrirSession();
+         Assert.assertEquals(0, c.scanner(5410188006711l));
+     }
+ 
+     @Test
+     public  void testScannerAuthentifierArticleDejaPresent() {
+         Set<Article> s = new HashSet<Article>();
+         s.add(db.getArticle(3017620402678l));
+ 
+         Scanette mockScannette = Mockito.mock(Scanette.class);
+         Mockito.when(mockScannette.getArticles()).thenReturn(s);
+         Mockito.when(mockScannette.quantite(3017620402678l)).thenReturn(1);
+         Mockito.when(mockScannette.relectureEffectuee()).thenReturn(true);
+ 
+         c.connexion(mockScannette);
+         c.ouvrirSession();
+         Assert.assertEquals(0, c.scanner(3017620402678l));
+     }
+ 
+     @Test
+     public  void testSupprimerNonAuthentifierEtatEnAttente() {
+         Assert.assertEquals(-1, c.supprimer(3017800238592l));
+     }
+ 
+     @Test
+     public  void testSupprimerNonAuthentifierAttenteCaissier() {
+         // Code inconnues
+         Set<Long> s = new HashSet<Long>();
+         s.add(4463487097622l);
+         s.add(2123201259812l);
+         s.add(1190623242310l);
+ 
+         Scanette mockScannette = Mockito.mock(Scanette.class);
+         Mockito.when(mockScannette.getReferencesInconnues()).thenReturn(s);
+         Mockito.when(mockScannette.relectureEffectuee()).thenReturn(true);
+ 
+ 
+ 
+         c.connexion(mockScannette);
+         Assert.assertEquals(-1, c.supprimer(3017800238592l));
+     }
+ 
+ 
+     @Test
+     public  void testSupprimerNonAuthentifierEtatPayement() {
+         Set<Article> s = new HashSet<Article>();
+         s.add(db.getArticle(3560070048786l));
+ 
+         Scanette mockScannette = Mockito.mock(Scanette.class);
+         Mockito.when(mockScannette.relectureEffectuee()).thenReturn(true);
+         Mockito.when(mockScannette.getArticles()).thenReturn(s);
+ 
+         c.connexion(mockScannette);
+         Assert.assertEquals(-1, c.supprimer(3017800238592l));
+     }
+ 
+ 
+     @Test
+     public  void testSupprimerArticleNUll() {
+         Set<Article> s = new HashSet<Article>();
+         s.add(db.getArticle(3017620402678l));
+         s.add(db.getArticle(3560071097424l));
+ 
+         Scanette mockScannette = Mockito.mock(Scanette.class);
+         Mockito.when(mockScannette.getArticles()).thenReturn(s);
+         Mockito.when(mockScannette.quantite(3017620402678l)).thenReturn(1);
+         Mockito.when(mockScannette.quantite(3560071097424l)).thenReturn(1);
+         Mockito.when(mockScannette.relectureEffectuee()).thenReturn(true);
+ 
+ 
+         c.connexion(mockScannette);
+         c.ouvrirSession();
+         Assert.assertEquals(-2,c.supprimer(71097424l));
+     }
+ 
+     @Test
+     public  void testSupprimerAuthentifierArticleNonPresent() {
+         Set<Article> s = new HashSet<Article>();
+         s.add(db.getArticle(3017620402678l));
+ 
+         Scanette mockScannette = Mockito.mock(Scanette.class);
+         Mockito.when(mockScannette.getArticles()).thenReturn(s);
+         Mockito.when(mockScannette.quantite(3017620402678l)).thenReturn(1);
+         Mockito.when(mockScannette.relectureEffectuee()).thenReturn(true);
+ 
+         c.connexion(mockScannette);
+         c.ouvrirSession();
+         Assert.assertEquals(-2, c.supprimer(5410188006711l));
+     }
+ 
+     @Test
+     public  void testSupprimerrAuthentifierArticleDejaPresent() {
+         Set<Article> s = new HashSet<Article>();
+         s.add(db.getArticle(3017620402678l));
+ 
+         Scanette mockScannette = Mockito.mock(Scanette.class);
+         Mockito.when(mockScannette.getArticles()).thenReturn(s);
+         Mockito.when(mockScannette.quantite(3017620402678l)).thenReturn(1);
+         Mockito.when(mockScannette.relectureEffectuee()).thenReturn(true);
+ 
+         c.connexion(mockScannette);
+         c.ouvrirSession();
+         Assert.assertEquals(0, c.supprimer(3017620402678l));
+     }
+ 
+     @Test
+     public  void testSupprimerrAuthentifierArticleDejaPresentPlusieurExemplaire() {
+         Set<Article> s = new HashSet<Article>();
+         s.add(db.getArticle(3017620402678l));
+ 
+         Scanette mockScannette = Mockito.mock(Scanette.class);
+         Mockito.when(mockScannette.getArticles()).thenReturn(s);
+         Mockito.when(mockScannette.quantite(3017620402678l)).thenReturn(4);
+         Mockito.when(mockScannette.relectureEffectuee()).thenReturn(true);
+ 
+         c.connexion(mockScannette);
+         c.ouvrirSession();
+         Assert.assertEquals(0, c.supprimer(3017620402678l));
+     }
 
 
 

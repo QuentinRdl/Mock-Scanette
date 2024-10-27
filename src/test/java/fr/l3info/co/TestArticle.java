@@ -109,6 +109,7 @@ public class TestArticle {
         Assert.assertFalse(isNotValid2.isValidEAN13());
         Assert.assertFalse(eanKey0.isValidEAN13());
     }
+    /*
     @Test
     public void testEquals() {
         Assert.assertNotNull(a);
@@ -125,7 +126,7 @@ public class TestArticle {
         Assert.assertFalse(isNotValid2.equals(isNotValid4));
         Assert.assertTrue(a.equals(a));
         Assert.assertFalse(a.equals(nullObject));
-    }
+    }*/
 
 
     @Test
@@ -197,5 +198,90 @@ public class TestArticle {
 
     }
 
+    /* =================== Test Quentin Payet =================*/
+
+    @Test   // indicates that this method is a test case
+    public void testName() {
+        // an observation that will obviously succeed
+        Assert.assertTrue(a != null);
+        // an observation that will cause the test to fail:
+        Assert.assertEquals("Cahier 72 pages", a.getNom());
+    }
+
+    @Test
+    public void testPrix() {
+        Assert.assertTrue(a != null);
+        Assert.assertEquals(1.3, a.getPrixUnitaire(), 0.0);
+    }
+
+    @Test
+    public void testEan13() {
+        Assert.assertTrue(a != null);
+        Assert.assertEquals(9789059605831l, a.getEAN13());
+    }
+
+    @Test
+    public void testIsValideEan13() {
+        Article notValideEAN13Article = new Article(9789505831l, 1.3, "Not Valide EAN13");
+
+        Assert.assertTrue(a != null);
+        Assert.assertTrue(notValideEAN13Article != null);
+
+        Assert.assertEquals(true, a.isValidEAN13());
+        Assert.assertEquals(false, notValideEAN13Article.isValidEAN13());
+
+        Article valideEan13ArticleInf13 = new Article(45496420598l, 1.3, "ean13 caractere inferieur 13");
+        Assert.assertEquals(true, valideEan13ArticleInf13.isValidEAN13());
+
+        Article NotvalideEan13ArticleSup13 = new Article(11245496420598l, 1.3, "ean13 caractere superieur 13");
+        Assert.assertEquals(false, NotvalideEan13ArticleSup13.isValidEAN13());
+    }
+
+    @Test
+    public void testIsEquals() {
+        Article notEqualsArticle = new Article(9789059505831l, 1.3, "Not Equal");
+        Article equalsArticle = new Article(9789059605831l, 1.3, "Equal");
+
+        Assert.assertTrue(a != null);
+        Assert.assertTrue(equalsArticle != null);
+        Assert.assertTrue(notEqualsArticle != null);
+
+        // Equal article
+        Assert.assertEquals(true, a.equals(equalsArticle));
+
+        // Not equal article
+        Assert.assertEquals(false, a.equals(notEqualsArticle));
+
+        // Same article
+        Assert.assertEquals(true, a.equals(a));
+
+        // Article null
+        Assert.assertEquals(false, a.equals(null));
+
+        // Not an article
+        Object o = new Object();
+        Assert.assertEquals(false, a.equals(o));
+
+    }
+
+    @Test
+    public void testIsHashCodeEquals() {
+        Article equalhashcode = new Article(9789059605831l, 1.3, "same ean13");
+        Article notEqualHashcode = new Article(9789059606831l, 1.3, "different ean13");
+
+        Assert.assertTrue(a != null);
+        Assert.assertTrue(equalhashcode != null);
+        Assert.assertTrue(notEqualHashcode != null);
+
+        // Same article
+        Assert.assertEquals(a.hashCode(), a.hashCode());
+
+        // Equal ean13
+        Assert.assertEquals(a.hashCode(), equalhashcode.hashCode());
+
+        // Not equal ean13
+        Assert.assertNotEquals(a.hashCode(), notEqualHashcode.hashCode());
+    }
+    
 }
 

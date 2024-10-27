@@ -84,6 +84,17 @@ public class Article {
 
     @Override
     public boolean equals(Object o) {
+
+        if (this == o) return true;
+
+        if (o == null) return false;
+
+        if (getClass() != o.getClass()) return false;
+
+        Article arO = (Article) (o);
+        return this.ean13 == arO.getEAN13();
+
+        /*
         if(o == this) return true;
         if(o == null) return false;
         if(o instanceof Article) {
@@ -92,7 +103,7 @@ public class Article {
             if(!Objects.equals(this.getNom(), isEqual.getNom())) return false;
             return this.getPrixUnitaire() == isEqual.getPrixUnitaire();
         }
-        return false;
+        return false;*/
     }
 
     @Override
