@@ -6,8 +6,11 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 
 // For the tests
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import java.util.HashSet;
+
 
 // JUnit
 import org.junit.runner.RunWith;
@@ -24,6 +27,8 @@ public class ScanetteTest {
     ArticleDB articleProduits = new ArticleDB();
     ArticleDB articleVoidProduits = new ArticleDB();
 
+    private Scanette sc;
+    private ArticleDB db;
     // Path to the csv files
 
     String pathArticleProduits = "target/classes/csv/produits.csv";
@@ -36,6 +41,9 @@ public class ScanetteTest {
        articleProduits.init(new File(pathArticleProduits));
        articleVoidProduits.init(new File(pathArticleVoidProduits));
        mockCaisse = Mockito.mock(ICaisse.class);
+       db = new ArticleDB();
+       db.init(new File("target/classes/csv/produits.csv"));
+       sc = new Scanette(db);
    }
 
     @Test
@@ -402,5 +410,347 @@ public class ScanetteTest {
 
 
     /* =================== Test Theo Delaroche =================*/
+
+
+
+    /* =================== Test Quentin Payet =================*/
+
+
+    @Test
+    public void testDebloquerScanette() {
+        Assert.assertEquals(0, sc.debloquer());
+        Assert.assertEquals(-1, sc.debloquer());
+    }
+
+    @Test
+    public  void testScanner() {
+        Assert.assertEquals(0, sc.debloquer());
+        Assert.assertEquals(0, sc.scanner(5410188006711l));
+    }
+
+    @Test
+    public  void testScannerMauvaisEtatQuentin() {
+        Assert.assertEquals(-1, sc.scanner(5410188006711l));
+    }
+
+    @Test
+    public  void testScannerEan13NonValide() {
+        Assert.assertEquals(0, sc.debloquer());
+        Assert.assertEquals(-2, sc.scanner(5410188006710l));
+
+    }
+
+    @Test
+    public  void testScannerEtatRelecture2ArticleRescanner() {
+        Assert.assertEquals(0, sc.debloquer());
+
+        // instanciation du mock
+        ICaisse mockCaisse = Mockito.mock(ICaisse.class);
+
+        // définition du comportement attendu pour l'objet
+        Mockito.when(mockCaisse.connexion(sc)).thenReturn(1);
+
+        // Ajout d'article dans le panier
+        Assert.assertEquals(0, sc.scanner(5410188006711l));
+        Assert.assertEquals(0, sc.scanner(5410188006711l));
+
+
+        Assert.assertEquals(1, sc.transmission(mockCaisse));
+        Assert.assertEquals(0, sc.scanner(5410188006711l));
+    }
+
+    @Test
+    public  void testScannerEtatRelecture1ArticleRescanner() {
+        Assert.assertEquals(0, sc.debloquer());
+
+        // instanciation du mock
+        ICaisse mockCaisse = Mockito.mock(ICaisse.class);
+
+        // définition du comportement attendu pour l'objet
+        Mockito.when(mockCaisse.connexion(sc)).thenReturn(1);
+
+        // Ajout d'article dans le panier
+        Assert.assertEquals(0, sc.scanner(5410188006711l));
+
+        Assert.assertEquals(1, sc.transmission(mockCaisse));
+        Assert.assertEquals(0, sc.scanner(5410188006711l));
+    }
+
+    @Test
+    public  void testScannerEtatRelectureVerifContainKeyTrue() {
+        testScannerEtatRelecture2ArticleRescanner();
+        Assert.assertEquals(0, sc.scanner(5410188006711l));
+    }
+
+    @Test
+    public  void testScannerEtatRelectureArticleRescannerInexistant() {
+        Assert.assertEquals(0, sc.debloquer());
+
+        // instanciation du mock
+        ICaisse mockCaisse = Mockito.mock(ICaisse.class);
+
+        // définition du comportement attendu pour l'objet
+        Mockito.when(mockCaisse.connexion(sc)).thenReturn(1);
+
+        // Ajout d'article dans le panier
+        Assert.assertEquals(0, sc.scanner(5410188006711l));
+        Assert.assertEquals(0, sc.scanner(5410188006711l));
+
+
+        Assert.assertEquals(1, sc.transmission(mockCaisse));
+        Assert.assertEquals(-3, sc.scanner(3046920010856l));
+        Assert.assertFalse(sc.relectureEffectuee());
+    }
+
+    @Test
+    public  void testScannerEtatRelectureMemeArticlePlusieurFois() {
+        testTransmission13Article();
+        Assert.assertEquals(0, sc.scanner(3046920010856l));
+        Assert.assertEquals(-3, sc.scanner(3046920010856l));
+
+    }
+
+    @Test
+    public  void testSupprimer() {
+        Assert.assertEquals(0, sc.debloquer());
+        Assert.assertEquals(0, sc.scanner(5410188006711l));
+        Assert.assertEquals(0, sc.supprimer(5410188006711l));
+    }
+
+    @Test
+    public  void testSupprimerArticlePlusieurOccurences() {
+        Assert.assertEquals(0, sc.debloquer());
+
+        Assert.assertEquals(0, sc.scanner(5410188006711l));
+        Assert.assertEquals(0, sc.scanner(5410188006711l));
+        Assert.assertEquals(2, sc.quantite(5410188006711l));
+
+        Assert.assertEquals(0, sc.supprimer(5410188006711l));
+    }
+
+
+    @Test
+    public  void testSupprimerMauvaisEtat() {
+        Assert.assertEquals(-1, sc.supprimer(5410188006711l));
+    }
+
+    @Test
+    public  void testSupprimerEan13NonValide() {
+        Assert.assertEquals(0, sc.debloquer());
+        Assert.assertEquals(-2, sc.supprimer(5410188006710l));
+    }
+
+    @Test
+    public  void testSupprimerEan13PasPresent() {
+        Assert.assertEquals(0, sc.debloquer());
+        Assert.assertEquals(-2, sc.supprimer(7640164630021l));
+    }
+
+
+    @Test
+    public  void testQuantite() {
+        Assert.assertEquals(0, sc.debloquer());
+        Assert.assertEquals(0, sc.scanner(3560070048786l));
+        Assert.assertEquals(0, sc.scanner(3560070048786l));
+        Assert.assertEquals(0, sc.scanner(3560070048786l));
+
+        Assert.assertEquals(3, sc.quantite(3560070048786l));
+    }
+
+    @Test
+    public  void testNonValideQuantite() {
+        Assert.assertEquals(0, sc.debloquer());
+        Assert.assertEquals(0, sc.scanner(3017800238592l));
+        Assert.assertEquals(0, sc.scanner(3017800238592l));
+
+        Assert.assertNotEquals(3, sc.quantite(3017800238592l));
+    }
+
+    @Test
+    public  void testAbandonQuentin() {
+        Assert.assertEquals(0, sc.debloquer());
+        Assert.assertEquals(0, sc.scanner(3560070048786l));
+        sc.abandon();
+        Assert.assertEquals(0, sc.debloquer());
+        Assert.assertTrue(sc.getArticles().isEmpty());
+    }
+
+    @Test
+    public  void getArticles() {
+        Assert.assertEquals(0, sc.debloquer());
+        Assert.assertEquals(0, sc.scanner(3560070048786l));
+        Assert.assertEquals(0, sc.scanner(45496420598l));
+        Assert.assertEquals(0, sc.scanner(3245412567216l));
+
+        Set<Article> s = new HashSet<Article>();
+        s.add(db.getArticle(3560070048786l));
+        s.add(db.getArticle(45496420598l));
+        s.add(db.getArticle(3245412567216l));
+
+        Assert.assertEquals(s, sc.getArticles());
+    }
+
+    @Test
+    public  void getArticlesEtatBloque() {
+        Assert.assertTrue(sc.getArticles().isEmpty());
+    }
+
+    @Test
+    public  void getReferencesInconnues() {
+        Assert.assertEquals(0, sc.debloquer());
+
+        // Code inconnues
+        Assert.assertEquals(-2, sc.scanner(4463487097622l));
+        Assert.assertEquals(-2, sc.scanner(2123201259812l));
+        Assert.assertEquals(-2, sc.scanner(1190623242310l));
+
+        Set<Long> s = new HashSet<Long>();
+        s.add(4463487097622l);
+        s.add(2123201259812l);
+        s.add(1190623242310l);
+
+        Assert.assertEquals(s, sc.getReferencesInconnues());
+    }
+
+    @Test
+    public  void getReferencesInconnuesEtatBloque() {
+        Assert.assertTrue(sc.getReferencesInconnues().isEmpty());
+    }
+
+
+    @Test
+    public void testTransmission0() {
+        Assert.assertEquals(0, sc.debloquer());
+
+        // instanciation du mock
+        ICaisse mockCaisse = Mockito.mock(ICaisse.class);
+
+        // définition du comportement attendu pour l'objet
+        Mockito.when(mockCaisse.connexion(sc)).thenReturn(1);
+        Assert.assertEquals(1, sc.transmission(mockCaisse));
+    }
+
+    @Test
+    public void testTransmissionErreurConnexion() {
+        Assert.assertEquals(0, sc.debloquer());
+
+        // instanciation du mock
+        ICaisse mockCaisse = Mockito.mock(ICaisse.class);
+
+        // définition du comportement attendu pour l'objet
+        Mockito.when(mockCaisse.connexion(sc)).thenReturn(-1); // -> bloque
+        Assert.assertEquals(-1, sc.transmission(mockCaisse));
+    }
+
+    @Test
+    public void testTransmissionEtatBloque() {
+
+        // instanciation du mock
+        ICaisse mockCaisse = Mockito.mock(ICaisse.class);
+
+        // définition du comportement attendu pour l'objet
+        Assert.assertEquals(-1, sc.transmission(mockCaisse));
+    }
+
+    @Test
+    public void testTransmissionConnexionValide() {
+        Assert.assertEquals(0, sc.debloquer());
+
+        // instanciation du mock
+        ICaisse mockCaisse = Mockito.mock(ICaisse.class);
+
+        // définition du comportement attendu pour l'objet
+        Mockito.when(mockCaisse.connexion(sc)).thenReturn(0);
+        Assert.assertEquals(0, sc.transmission(mockCaisse));
+        Assert.assertTrue(sc.getArticles().isEmpty() && sc.getReferencesInconnues().isEmpty());
+    }
+
+    @Test
+    public  void testTransmission13Article() {
+        Assert.assertEquals(0, sc.debloquer());
+
+        // instanciation du mock
+        ICaisse mockCaisse = Mockito.mock(ICaisse.class);
+
+        // définition du comportement attendu pour l'objet
+        Mockito.when(mockCaisse.connexion(sc)).thenReturn(1);
+
+        // Ajout d'article dans le panier
+        Assert.assertEquals(0, sc.scanner(5410188006711l));
+        Assert.assertEquals(0, sc.scanner(3560070048786l));
+        Assert.assertEquals(0, sc.scanner(3017800238592l));
+        Assert.assertEquals(0, sc.scanner(3560070976478l));
+        Assert.assertEquals(0, sc.scanner(3046920010856l));
+        Assert.assertEquals(0, sc.scanner(8715700110622l));
+        Assert.assertEquals(0, sc.scanner(3570590109324l));
+        Assert.assertEquals(0, sc.scanner(3520115810259l));
+        Assert.assertEquals(0, sc.scanner(3270190022534l));
+        Assert.assertEquals(0, sc.scanner(8718309259938l));
+        Assert.assertEquals(0, sc.scanner(3560071097424l));
+        Assert.assertEquals(0, sc.scanner(3017620402678l));
+        Assert.assertEquals(0, sc.scanner(3245412567216l));
+
+        Assert.assertEquals(1, sc.transmission(mockCaisse));
+    }
+
+    @Test
+    public void testTransmissionEtatRelectureKO() {
+        testScannerEtatRelectureArticleRescannerInexistant();
+
+        ICaisse mockCaisse = Mockito.mock(ICaisse.class);
+        Assert.assertEquals(-1, sc.transmission(mockCaisse));
+    }
+
+    @Test
+    public void testTransmissionEtatRelecture() {
+
+        Assert.assertEquals(0, sc.debloquer());
+        // instanciation du mock
+        ICaisse mockCaisse = Mockito.mock(ICaisse.class);
+
+        // définition du comportement attendu pour l'objet
+        Mockito.when(mockCaisse.connexion(sc)).thenReturn(1);
+        Assert.assertEquals(1, sc.transmission(mockCaisse));
+        Assert.assertEquals(-1, sc.transmission(mockCaisse));
+    }
+
+    @Test
+    public void testTransmissionICaisseNull() {
+        Assert.assertEquals(0, sc.debloquer());
+
+        // instanciation du mock
+        ICaisse mockCaisse = null;
+
+        // définition du comportement attendu pour l'objet
+        Assert.assertEquals(-1, sc.transmission(mockCaisse));
+    }
+
+    @Test
+    public void testRelectureEffectuee() {
+        Assert.assertEquals(0, sc.debloquer());
+
+        // instanciation du mock
+        ICaisse mockCaisse = Mockito.mock(ICaisse.class);
+
+        // définition du comportement attendu pour l'objet
+        Mockito.when(mockCaisse.connexion(sc)).thenReturn(1);
+        Assert.assertEquals(1, sc.transmission(mockCaisse));
+        Assert.assertTrue(sc.relectureEffectuee());
+    }
+
+    @Test
+    public void testRelectureNonEffectuee() {
+        Assert.assertEquals(0, sc.debloquer());
+
+        // instanciation du mock
+        ICaisse mockCaisse = Mockito.mock(ICaisse.class);
+
+        // définition du comportement attendu pour l'objet
+        Mockito.when(mockCaisse.connexion(sc)).thenReturn(0);
+        Assert.assertEquals(0, sc.transmission(mockCaisse));
+        Assert.assertFalse(sc.relectureEffectuee());
+    }
+
+
 
 }
