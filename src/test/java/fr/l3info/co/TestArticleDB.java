@@ -5,6 +5,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
 
 /**
  * Test file for the ArticleDB class.
@@ -182,6 +185,132 @@ public class TestArticleDB {
         db.init(new File("target/classes/csv/produits.csv"));
 
         Assert.assertEquals(null, db.getArticle(000l));
+    }
+
+     /* --- TESTS - GALLAND Romain --- */
+
+    private File csv_articles_file_GLD;
+    private ArticleDB db_GLD;
+
+    /**
+     * Créer un nouveau articleDB et un fichier CSV d'articles avant chaque test.
+     */
+    public void before_GLD() throws IOException, FileFormatException {
+        csv_articles_file_GLD = TestUtils.generateCsvFile();
+        Assert.assertTrue(csv_articles_file_GLD.exists());
+        db_GLD = TestUtils.generateArticleDB(csv_articles_file_GLD);
+    }
+
+    public void after_GLD() throws IOException {
+        Files.deleteIfExists(csv_articles_file_GLD.toPath());
+    }
+
+    /**
+     * Teste l'initialisation d'une base de données d'articles à partir d'un fichier CSV.
+     */
+    @Test
+    public void testInit_ExistingFile_GLD() throws FileFormatException, IOException {
+        before_GLD();
+        ArticleDB db = new ArticleDB();
+        db.init(csv_articles_file_GLD);
+        after_GLD();
+    }
+
+    /**
+     * Teste l'initialisation d'une base de données d'articles à partir d'un fichier CSV inexistant.
+     */
+    @Test(expected=FileFormatException.class)
+    public void testLectureFichierInexistant_GLD() throws FileFormatException, IOException {
+        before_GLD();
+        ArticleDB db = new ArticleDB();
+        db.init(new File("fichierInexistant.csv"));
+        after_GLD();
+    }
+
+
+    /**
+     * Teste l'initialisation d'une base de données d'articles à partir d'un fichier CSV vide.
+     */
+    @Test
+    public void testInit_EmptyFile_GLD() throws IOException, FileFormatException {
+        before_GLD();
+        File emptyFile = new File(TestUtils.TEMP_DIR + "empty.csv");
+        emptyFile.createNewFile();
+        ArticleDB db = new ArticleDB();
+        db.init(emptyFile);
+        Assert.assertEquals(0, db.getTailleDB());
+        Files.deleteIfExists(emptyFile.toPath());
+        after_GLD();
+    }
+
+    /**
+     * Teste l'initialisation d'une base de données d'articles à partir d'un fichier CSV mal formatté.
+     */
+    @Test(expected = FileFormatException.class)
+    public void testInit_MalformedFile_GLD() throws IOException, FileFormatException {
+        before_GLD();
+        File malformedFile = new File(TestUtils.TEMP_DIR + "malformed.csv");
+        try (FileWriter fw = new FileWriter(malformedFile)) {
+            fw.write("malformed,line\nanother,malformed,line");
+        }
+        ArticleDB db = new ArticleDB();
+        db.init(malformedFile);
+        Files.deleteIfExists(malformedFile.toPath());
+        after_GLD();
+    }
+
+    /**
+     * Teste la fonction getTailleDB de la classe ArticleDB dans un cas normal
+     */
+    @Test
+    public void testGetTailleDB_GLD() throws FileFormatException, IOException {
+        before_GLD();
+        Assert.assertEquals(db_GLD.getTailleDB(), TestUtils.TEST_CSV_CONTENT.split("\n").length);
+        after_GLD();
+    }
+
+    /**
+     * Teste la fonction getTailleDB de la classe ArticleDB dans le cas d'une base de données vide
+     */
+    @Test
+    public void testGetTailleDB_empty_GLD() throws FileFormatException, IOException {
+        before_GLD();
+        ArticleDB empty_db = new ArticleDB();
+        Assert.assertEquals(0, empty_db.getTailleDB());
+        after_GLD();
+    }
+
+    /**
+     * Teste la fonction getArticle de la classe ArticleDB dans le cas d'un article existant
+     */
+    @Test
+    public void testGetArticle_GLD() throws FileFormatException, IOException {
+        before_GLD();
+        Article getted = db_GLD.getArticle(8715700110622L);
+        Assert.assertEquals("Ketchup", getted.getNom());
+        Assert.assertEquals(0.96, getted.getPrixUnitaire(), 0.0);
+        Assert.assertEquals(8715700110622L, getted.getEAN13());
+        after_GLD();
+    }
+
+    /**
+     * Teste la fonction getArticle de la classe ArticleDB dans le cas d'un article qui n'existe pas
+     */
+    @Test
+    public void testGetArticle_null_GLD() throws FileFormatException, IOException {
+        before_GLD();
+        Assert.assertNull(db_GLD.getArticle(-5L));
+        after_GLD();
+    }
+
+    /**
+     * Teste la fonction getArticle de la classe ArticleDB dans le cas d'un ean 13 trop long
+     */
+    @Test
+    public void testGetArticle_NonExistingEAN13_GLD() throws FileFormatException, IOException {
+        before_GLD();
+        Assert.assertNull(db_GLD.getArticle(9999999999999L));
+        after_GLD();
     }
 
 
