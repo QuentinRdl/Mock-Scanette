@@ -282,6 +282,86 @@ public class TestArticle {
         // Not equal ean13
         Assert.assertNotEquals(a.hashCode(), notEqualHashcode.hashCode());
     }
+
+     /* --- TESTS - GALLAND Romain --- */
+
+    Article article_GLD;
+
+    public void setup_GLD() {
+        article_GLD = new Article(9789059605831L, 1.3, "Cahier 72 pages");
+    }
+
+    @Test
+    public void testName_GLD() {
+        Assert.assertEquals("Cahier 72 pages", article_GLD.getNom());
+    }
+
+    @Test
+    public void testPrice_GLD() {
+        Assert.assertEquals(1.3, article_GLD.getPrixUnitaire(), 0.0);
+    }
+
+    @Test
+    public void testEAN13_GLD() {
+        Assert.assertEquals(9789059605831L, article_GLD.getEAN13());
+    }
+
+    @Test
+    public void testValidEAN13_VALID_GLD() {
+        Assert.assertTrue(article_GLD.isValidEAN13());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testValidEAN13_TooLongEAN_GLD() {
+        Article tooLongEanArticle = new Article(97890596058315L, 0.0, "");
+        Assert.assertFalse(tooLongEanArticle.isValidEAN13());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testValidEAN13_BadEAN_GLD() {
+        new Article(9789059605838L, 0.0, "");
+    }
+
+    @Test
+    public void testEquals_GLD() {
+        Article equalsArticle = new Article(9789059605831L, 1.3, "Cahier 72 pages");
+        Assert.assertEquals(article_GLD, equalsArticle);
+    }
+
+    @Test
+    public void testEquals_NotEqualsByAttributes_GLD() {
+        Article notEqualsArticle = new Article(3560070976478L, 1.5, "Not equals");
+        Assert.assertNotEquals(article_GLD, notEqualsArticle);
+    }
+
+    @Test
+    public void testEquals_null_GLD() {
+        Assert.assertNotEquals(null, article_GLD);
+    }
+
+    @Test
+    public void testEquals_same_GLD() {
+        Assert.assertEquals(article_GLD, article_GLD);
+    }
+
+    @Test
+    public void testEquals_NotSameType_GLD() {
+        Assert.assertNotEquals(new Object(), article_GLD);
+    }
+
+    @Test
+    public void testHashCode_GLD() {
+        int hashcode = Long.hashCode(article_GLD.getEAN13());
+        Assert.assertEquals(article_GLD.hashCode(), hashcode);
+    }
+
+    @Test
+    public void testPrettyEan13_GLD() {
+        Article art = new Article(3046920010856L, 0.0, "");
+        Assert.assertEquals("3046920010856", art.prettyEan13());
+        art = new Article(454964205986L, 0.0, "");
+        Assert.assertEquals("0454964205986", art.prettyEan13());
+    }
     
 }
 
