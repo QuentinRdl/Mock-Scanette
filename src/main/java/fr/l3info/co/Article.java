@@ -110,4 +110,10 @@ public class Article {
     public int hashCode() {
         return Long.hashCode(ean13);
     }
+
+    public String prettyEan13() {
+        StringBuilder str_vl = new StringBuilder(String.valueOf(this.ean13));
+        while(str_vl.length() < 13) str_vl.insert(0, "0");
+        return str_vl.toString();
+    }
 }

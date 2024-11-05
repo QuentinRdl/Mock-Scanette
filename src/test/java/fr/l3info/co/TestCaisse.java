@@ -17,11 +17,15 @@ import org.junit.runner.RunWith;
 
 // For the usage of files
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 
@@ -1053,7 +1057,304 @@ public class TestCaisse {
          Assert.assertEquals(0, c.supprimer(3017620402678l));
      }
 
+     /* --- TESTS - GALLAND Romain --- */
 
+private ArticleDB articleProduits_GLD;
+    private Scanette spyScan_GLD;
+    private File csvFileForArticleBD_GLD;
+
+    public void setup_GLD() throws FileFormatException, IOException {
+        articleProduits_GLD = new ArticleDB();
+        articleProduits_GLD.init((csvFileForArticleBD_GLD = TestUtils.generateCsvFile()));
+        spyScan_GLD = Mockito.spy(new Scanette(articleProduits_GLD));
+    }
+
+    public void after_GLD() throws IOException {
+        Files.deleteIfExists(csvFileForArticleBD_GLD.toPath());
+    }
+
+    @Test
+    public void testAbandon_Transaction_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        MaCaisse caisse = Mockito.spy(new MaCaisse(articleProduits_GLD));  // Utilisation d'un spy pour la caisse
+        caisse.abandon();  // Appel de la méthode abandon pour annuler la transaction
+        verify(caisse).abandon();  // Vérification que la méthode abandon a bien été appelée
+        after_GLD();
+    }
+
+    @Test
+    public void testConnexion_SuccessfulWithoutRelecture_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        MaCaisse caisse = Mockito.spy(new MaCaisse(articleProduits_GLD));  // Spy sur la caisse
+        assertNotNull(caisse);  // Vérification que la caisse est bien initialisée
+
+        Scanette scanette = Mockito.spy(new Scanette(articleProduits_GLD));  // Spy sur la scanette
+        assertNotNull(scanette);  // Vérification que la scanette est bien initialisée
+        when(scanette.relectureEffectuee()).thenReturn(true);  // Simulation d'une relecture effectuée
+        scanette.debloquer();  // Déblocage de la scanette
+        assertEquals(0, scanette.scanner(3245412567216L));  // Simulation du scan d'un article
+
+        when(caisse.demandeRelecture()).thenReturn(false);  // Pas de relecture demandée
+
+        assertEquals(0, caisse.connexion(scanette));  // Connexion réussie
+        assertEquals(0, caisse.ouvrirSession());  // Ouverture de session réussie
+        after_GLD();
+    }
+
+    @Test
+    public void testOuvrirSession_WithoutPriorConnexionReturnsError_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        MaCaisse caisse = Mockito.spy(new MaCaisse(articleProduits_GLD));  // Spy sur MaCaisse
+        assertEquals(-1, caisse.ouvrirSession());  // Tentative d'ouverture de session sans connexion retourne une erreur
+        after_GLD();
+    }
+
+    @Test
+    public void testConnexion_WithUnrecognizedArticlesAndOpenSession_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        MaCaisse caisse = Mockito.spy(new MaCaisse(articleProduits_GLD));  // Spy sur MaCaisse
+        assertNotNull(caisse);  // Vérification que la caisse est bien initialisée
+
+        Set<Long> articlesNonReconnus = new HashSet<>();  // Ensemble d'articles non reconnus
+        articlesNonReconnus.add(475475458L);
+        articlesNonReconnus.add(475470055458L);
+        articlesNonReconnus.add(4745375458L);
+
+        Scanette scanetteMock = Mockito.spy(new Scanette(articleProduits_GLD));  // Spy sur la scanette
+        when(scanetteMock.getReferencesInconnues()).thenReturn(articlesNonReconnus);  // Simulation d'articles non reconnus
+        scanetteMock.debloquer();  // Déblocage de la scanette
+        assertEquals(0, scanetteMock.scanner(3245412567216L));  // Simulation du scan d'un article
+
+        when(caisse.demandeRelecture()).thenReturn(false);  // Pas de relecture demandée
+
+        assertEquals(0, caisse.connexion(scanetteMock));  // Connexion réussie avec articles non reconnus
+        assertEquals(0, caisse.ouvrirSession());  // Ouverture de session réussie
+        after_GLD();
+    }
+
+    @Test
+    public void testConnexion_WithNullScanetteReturnsError_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        MaCaisse caisse = new MaCaisse(articleProduits_GLD);
+        assertNotNull(caisse);  // Vérifie que l'objet caisse est bien initialisé
+        assertEquals(-1, caisse.connexion(null));  // Connexion avec une scanette null retourne -1
+        after_GLD();
+    }
+
+    @Test
+    public void testConnexion_WithRelectureRequest_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        MaCaisse caisse = Mockito.spy(new MaCaisse(articleProduits_GLD));
+        when(spyScan_GLD.relectureEffectuee()).thenReturn(false);
+        spyScan_GLD.debloquer();
+        spyScan_GLD.scanner(3046920010856L);
+        when(caisse.demandeRelecture()).thenReturn(true);
+        caisse.connexion(spyScan_GLD);
+        after_GLD();
+    }
+
+    @Test
+    public void testConnexion_WhenStateIsNotPending_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        MaCaisse caisse = new MaCaisse(articleProduits_GLD);
+        caisse.connexion(spyScan_GLD);
+        assertEquals(-1, caisse.connexion(spyScan_GLD));
+        after_GLD();
+    }
+
+    @Test
+    public void testFermerSession_StateAuthenticatedAndPurchaseIsEmpty_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        when(spyScan_GLD.getArticles()).thenReturn(Collections.emptySet());
+
+        MaCaisse c = new MaCaisse(articleProduits_GLD);
+
+        c.connexion(spyScan_GLD);
+
+        c.ouvrirSession();
+
+        assertEquals(0, c.fermerSession());
+        after_GLD();
+    }
+
+    @Test
+    public void testFermerSession_StateAuthenticatedAndPurchaseIsNotEmpty_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        spyScan_GLD.debloquer();
+
+        spyScan_GLD.scanner(9999999999999L);
+        spyScan_GLD.scanner(3570590109324L);
+
+        MaCaisse c = Mockito.spy(new MaCaisse(articleProduits_GLD));
+        when(c.demandeRelecture()).thenReturn(false);
+
+        System.out.println("c.connexion(spyScan) = " + c.connexion(spyScan_GLD));
+
+        c.ouvrirSession();
+
+        assertEquals(0, c.fermerSession());
+        after_GLD();
+    }
+
+    @Test
+    public void testFermerSession_StateNotAuthenticated_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        MaCaisse c = new MaCaisse(articleProduits_GLD);
+        assertEquals(-1, c.fermerSession());
+        after_GLD();
+    }
+
+    @Test
+    public void testPayer_NotInStatePaiement_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        MaCaisse c = new MaCaisse(articleProduits_GLD);
+        c.payer(0.0);
+        after_GLD();
+    }
+
+    @Test
+    public void testPayer_GivenExcessAmount_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        spyScan_GLD.debloquer();
+        spyScan_GLD.scanner(3570590109324L);
+        MaCaisse c = new MaCaisse(articleProduits_GLD);
+        c.connexion(spyScan_GLD);
+        c.ouvrirSession();
+        c.fermerSession();
+        c.payer(50);
+        after_GLD();
+    }
+
+    @Test
+    public void testPayer_GivenInsufficientAmount_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        spyScan_GLD.debloquer();
+        spyScan_GLD.scanner(3570590109324L);
+        MaCaisse c = new MaCaisse(articleProduits_GLD);
+        c.connexion(spyScan_GLD);
+        c.ouvrirSession();
+        c.fermerSession();
+        System.out.println("c.payer(7) = " + c.payer(7));
+        after_GLD();
+    }
+
+    @Test
+    public void testPayer_GivenExactAmount_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        spyScan_GLD.debloquer();
+        spyScan_GLD.scanner(3570590109324L);
+        MaCaisse c = new MaCaisse(articleProduits_GLD);
+        c.connexion(spyScan_GLD);
+        c.ouvrirSession();
+        c.fermerSession();
+        System.out.println("c.payer(7) = " + c.payer(7.48));
+        after_GLD();
+    }
+
+    @Test
+    public void testScanner_NotConnected_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        MaCaisse caisse = new MaCaisse(articleProduits_GLD);
+        caisse.connexion(spyScan_GLD);
+        assertEquals(-1, caisse.scanner(-1L));
+        after_GLD();
+    }
+
+    @Test
+    public void testScanner_UnknownProduct_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        MaCaisse caisse = new MaCaisse(articleProduits_GLD);
+        caisse.connexion(spyScan_GLD);
+        caisse.ouvrirSession();
+        assertEquals(-2, caisse.scanner(-1));
+        after_GLD();
+    }
+
+    @Test
+    public void testScanner_KnownProduct_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        MaCaisse caisse = new MaCaisse(articleProduits_GLD);
+        caisse.connexion(spyScan_GLD);
+        caisse.ouvrirSession();
+        assertEquals(0, caisse.scanner(8715700110622L));
+        after_GLD();
+    }
+
+    @Test
+    public void testScanner_ProductAlreadyPresent_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        spyScan_GLD.debloquer();
+        spyScan_GLD.scanner(8715700110622L);
+        MaCaisse caisse = Mockito.spy(new MaCaisse(articleProduits_GLD));
+        when(caisse.demandeRelecture()).thenReturn(false);
+        caisse.connexion(spyScan_GLD);
+        caisse.ouvrirSession();
+        assertEquals(0, caisse.scanner(8715700110622L));
+        after_GLD();
+    }
+
+    @Test
+    public void testSupprimer_NotAuthenticated_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        MaCaisse caisse = Mockito.spy(new MaCaisse(articleProduits_GLD));
+        when(caisse.demandeRelecture()).thenReturn(false);
+        caisse.connexion(spyScan_GLD);
+        assertEquals(-1, caisse.supprimer(-1L));
+        after_GLD();
+    }
+
+    @Test
+    public void testSupprimer_ArticleNotPresent_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        MaCaisse caisse = Mockito.spy(new MaCaisse(articleProduits_GLD));
+        when(caisse.demandeRelecture()).thenReturn(false);
+        caisse.connexion(spyScan_GLD);
+        caisse.ouvrirSession();
+        assertEquals(-2, caisse.supprimer(-1L));
+        after_GLD();
+    }
+
+    @Test
+    public void testSupprimer_OnlyArticlePresent_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        spyScan_GLD.debloquer();
+        spyScan_GLD.scanner(8715700110622L);
+        MaCaisse caisse = Mockito.spy(new MaCaisse(articleProduits_GLD));
+        when(caisse.demandeRelecture()).thenReturn(false);
+        caisse.connexion(spyScan_GLD);
+        caisse.ouvrirSession();
+        assertEquals(0, caisse.supprimer(8715700110622L));
+        after_GLD();
+    }
+
+    @Test
+    public void testSupprimer_NotOnlyArticlePresent_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        spyScan_GLD.debloquer();
+        spyScan_GLD.scanner(3560070048786L);
+        spyScan_GLD.scanner(7640164630021L);
+        spyScan_GLD.scanner(3017620402678L);
+        MaCaisse caisse = Mockito.spy(new MaCaisse(articleProduits_GLD));
+        when(caisse.demandeRelecture()).thenReturn(false);
+        caisse.connexion(spyScan_GLD);
+        caisse.ouvrirSession();
+        assertEquals(0, caisse.supprimer(7640164630021L));
+        after_GLD();
+    }
+
+    @Test
+    public void testSupprimer_DeleteOneOfTwoArticles_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        spyScan_GLD.debloquer();
+        spyScan_GLD.scanner(3560070048786L);
+        spyScan_GLD.scanner(3560070048786L);
+        MaCaisse caisse = Mockito.spy(new MaCaisse(articleProduits_GLD));
+        when(caisse.demandeRelecture()).thenReturn(false);
+        caisse.connexion(spyScan_GLD);
+        caisse.ouvrirSession();
+        assertEquals(0, caisse.supprimer(3560070048786L));
+        after_GLD();
+    }
 
 
 }

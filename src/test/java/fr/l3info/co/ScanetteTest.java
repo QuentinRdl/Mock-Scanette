@@ -9,6 +9,9 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.HashSet;
 
 
@@ -751,6 +754,237 @@ public class ScanetteTest {
         Assert.assertFalse(sc.relectureEffectuee());
     }
 
+     /* --- TESTS - GALLAND Romain --- */
 
+    private ArticleDB articleDB_GLD;
+    private File csv_file_GLD;
+    private Scanette scan_GLD;
+    private ICaisse mockCaisse_GLD;
+
+    public void setup_GLD() throws IOException, FileFormatException {
+        csv_file_GLD = TestUtils.generateCsvFile();  // Génère le fichier CSV temporaire
+        articleDB_GLD = TestUtils.generateArticleDB(csv_file_GLD);  // Charge la base d'articles
+        scan_GLD = new Scanette(articleDB_GLD);  // Initialise la scanette avec la base d'articles
+        mockCaisse_GLD = Mockito.mock(ICaisse.class);  // Crée un mock de la caisse
+    }
+
+    // Teste le déblocage normal
+    @Test
+    public void testDebloquer_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        Assert.assertEquals(0, scan_GLD.debloquer());
+        cleanup_GLD();
+    }
+
+    // Teste la tentative de déblocage lorsque la scanette n'est pas bloquée
+    @Test
+    public void testDebloquer_two_attempts_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        scan_GLD.debloquer();
+        Assert.assertEquals(-1, scan_GLD.debloquer());
+        cleanup_GLD();
+    }
+
+    // Teste la quantification correcte des articles scannés
+    @Test
+    public void testQuantite_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        scan_GLD.debloquer();
+        long eanUsed = 8715700110622L;
+        scan_GLD.scanner(eanUsed);
+        Assert.assertEquals(1, scan_GLD.quantite(eanUsed));
+        scan_GLD.scanner(eanUsed);
+        Assert.assertEquals(2, scan_GLD.quantite(eanUsed));
+        cleanup_GLD();
+    }
+
+    // Teste la quantification avec une quantité de zéro pour un article non scanné
+    @Test
+    public void testQuantite_ZeroQuantity_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        scan_GLD.debloquer();
+        Assert.assertEquals(0, scan_GLD.quantite(8715700110622L));
+        cleanup_GLD();
+    }
+
+    // Teste le scanner avec un produit reconnu
+    @Test
+    public void testScanner_ProduitReconnu_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        scan_GLD.debloquer();
+        long eanUsed = 8715700110622L;
+        Assert.assertEquals(0, scan_GLD.scanner(eanUsed));
+        Assert.assertEquals(1, scan_GLD.getArticles().size());
+        cleanup_GLD();
+    }
+
+    // Teste le scanner avec un produit non reconnu
+    @Test
+    public void testScanner_ProduitNonReconnu_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        scan_GLD.debloquer();
+        long unknownEAN = 1234567890123L;
+        Assert.assertEquals(-2, scan_GLD.scanner(unknownEAN));
+        cleanup_GLD();
+    }
+
+    // Teste le scanner alors que la scanette est bloquée
+    @Test
+    public void testScanner_ScanBloque_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        long eanUsed = 8715700110622L;
+        Assert.assertEquals(-1, scan_GLD.scanner(eanUsed));
+        cleanup_GLD();
+    }
+
+    // Teste la suppression d'un produit du panier
+    @Test
+    public void testSupprimer_ProduitDansPanier_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        scan_GLD.debloquer();
+        long eanUsed = 8715700110622L;
+        scan_GLD.scanner(eanUsed);
+        Assert.assertEquals(0, scan_GLD.supprimer(eanUsed));
+        Assert.assertEquals(0, scan_GLD.quantite(eanUsed));
+        cleanup_GLD();
+    }
+
+    // Teste la suppression d'un produit du panier lorsque la quantité de produit est supérieur à 1
+    @Test
+    public void testSupprimer_ProduitDansPanier_n_sup_1_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        scan_GLD.debloquer();
+        long eanUsed = 8715700110622L;
+        int quantity = 5;
+        for (int i = 0; i < quantity; i++) {
+            scan_GLD.scanner(eanUsed);
+            quantity--;
+        }
+        Assert.assertEquals(0, scan_GLD.supprimer(eanUsed));
+        Assert.assertEquals(quantity, scan_GLD.quantite(eanUsed));
+        cleanup_GLD();
+    }
+
+    // Teste la suppression d'un produit qui n'est pas dans le panier
+    @Test
+    public void testSupprimer_ProduitAbsent_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        scan_GLD.debloquer();
+        long eanUsed = 8715700110622L;
+        Assert.assertEquals(-2, scan_GLD.supprimer(eanUsed));
+        cleanup_GLD();
+    }
+
+    // Teste la suppression d'un produit alors que la scanette est bloquée
+    @Test
+    public void testSupprimer_ScanBloquee_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        long eanUsed = 8715700110622L;
+        Assert.assertEquals(-1, scan_GLD.supprimer(eanUsed));
+        cleanup_GLD();
+    }
+
+    // Teste l'abandon de la transaction et le blocage de la scanette
+    @Test
+    public void testAbandon_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        scan_GLD.debloquer();  // Débloque la scanette
+        long eanUsed = 8715700110622L;
+        scan_GLD.scanner(eanUsed);  // Ajoute un produit au panier
+        scan_GLD.abandon();  // Abandonne la transaction
+
+        // Vérifie que l'état est bien revenu à BLOQUEE et que le panier est vide
+        Assert.assertEquals(0, scan_GLD.debloquer());  // Peut être débloqué car l'état est BLOQUEE
+        Assert.assertEquals(0, scan_GLD.quantite(eanUsed));  // Vérifie que le panier est vide après abandon
+        Assert.assertTrue(scan_GLD.getArticles().isEmpty());  // Vérifie que le panier est effectivement vide
+        cleanup_GLD();
+    }
+
+
+    // Teste la récupération des articles non reconnus
+    @Test
+    public void testGetReferencesInconnues_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        scan_GLD.debloquer();
+        long unknownEAN = 1234567890123L;
+        scan_GLD.scanner(unknownEAN);
+        Set<Long> inconnus = scan_GLD.getReferencesInconnues();
+        Assert.assertTrue(inconnus.contains(unknownEAN));
+        cleanup_GLD();
+    }
+
+    @Test
+    public void testTransmission_CaisseNull_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        scan_GLD.debloquer();
+        Assert.assertEquals(-1, scan_GLD.transmission(null));
+        cleanup_GLD();
+    }
+
+    // Teste la méthode de transmission avec une relecture demandée
+    @Test
+    public void testTransmission_RelectureDemandee_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        scan_GLD.debloquer();
+        Mockito.when(mockCaisse_GLD.connexion(scan_GLD)).thenReturn(1);  // Simule une demande de relecture
+
+        Assert.assertEquals(1, scan_GLD.transmission(mockCaisse_GLD));
+        cleanup_GLD();
+    }
+
+    // Teste la méthode de transmission sans relecture
+    @Test
+    public void testTransmission_AucuneRelecture_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        scan_GLD.debloquer();
+        Mockito
+                .when(mockCaisse_GLD.connexion(scan_GLD))
+                .thenReturn(0);  // Simule une absence de relecture
+
+        Assert.assertEquals(0, scan_GLD.transmission(mockCaisse_GLD));
+        cleanup_GLD();
+    }
+
+    // Teste la méthode de transmission avec une erreur de la caisse
+    @Test
+    public void testTransmission_Erreur_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        scan_GLD.debloquer();
+        Mockito.when(mockCaisse_GLD.connexion(scan_GLD)).thenReturn(-1);  // Simule une erreur
+
+        Assert.assertEquals(-1, scan_GLD.transmission(mockCaisse_GLD));
+        cleanup_GLD();
+    }
+
+    // Teste la relecture effectuée avec succès
+    @Test
+    public void testRelectureEffectuee_Succes_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        scan_GLD.debloquer();
+        Mockito.when(mockCaisse_GLD.connexion(scan_GLD)).thenReturn(1);  // Simule une absence de relecture
+
+        scan_GLD.transmission(mockCaisse_GLD);
+        Assert.assertTrue(scan_GLD.relectureEffectuee());
+        cleanup_GLD();
+    }
+
+    // Teste la relecture en échec
+    @Test
+    public void testRelectureEffectuee_Echec_GLD() throws FileFormatException, IOException {
+        setup_GLD();
+        scan_GLD.debloquer();
+        long eanUsed = 8715700110622L;
+        scan_GLD.scanner(eanUsed);
+        Mockito.when(mockCaisse_GLD.connexion(scan_GLD)).thenReturn(1);  // Simule une demande de relecture
+        scan_GLD.transmission(mockCaisse_GLD);
+
+        scan_GLD.scanner(1234567890123L);  // Simule un produit incorrect lors de la relecture
+        Assert.assertFalse(scan_GLD.relectureEffectuee());
+        cleanup_GLD();
+    }
+
+    public void cleanup_GLD() throws IOException {
+        Files.deleteIfExists(csv_file_GLD.toPath());  // Supprime le fichier CSV temporaire
+    }
 
 }
