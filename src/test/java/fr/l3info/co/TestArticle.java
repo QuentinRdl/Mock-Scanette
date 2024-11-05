@@ -285,74 +285,69 @@ public class TestArticle {
 
      /* --- TESTS - GALLAND Romain --- */
 
-    Article article_GLD;
-
-    public void setup_GLD() {
-        article_GLD = new Article(9789059605831L, 1.3, "Cahier 72 pages");
-    }
-
     @Test
     public void testName_GLD() {
-        Assert.assertEquals("Cahier 72 pages", article_GLD.getNom());
+        Assert.assertEquals("Cahier 72 pages", a.getNom());
     }
 
     @Test
     public void testPrice_GLD() {
-        Assert.assertEquals(1.3, article_GLD.getPrixUnitaire(), 0.0);
+        Assert.assertEquals(1.3, a.getPrixUnitaire(), 0.0);
     }
 
     @Test
     public void testEAN13_GLD() {
-        Assert.assertEquals(9789059605831L, article_GLD.getEAN13());
+        Assert.assertEquals(9789059605831L, a.getEAN13());
     }
 
     @Test
     public void testValidEAN13_VALID_GLD() {
-        Assert.assertTrue(article_GLD.isValidEAN13());
+        Assert.assertTrue(a.isValidEAN13());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testValidEAN13_TooLongEAN_GLD() {
         Article tooLongEanArticle = new Article(97890596058315L, 0.0, "");
         Assert.assertFalse(tooLongEanArticle.isValidEAN13());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testValidEAN13_BadEAN_GLD() {
-        new Article(9789059605838L, 0.0, "");
+        Article badEAN_GLD = new Article(9789059605838L, 0.0, "");
+        Assert.assertFalse(badEAN_GLD.isValidEAN13());
     }
 
     @Test
     public void testEquals_GLD() {
         Article equalsArticle = new Article(9789059605831L, 1.3, "Cahier 72 pages");
-        Assert.assertEquals(article_GLD, equalsArticle);
+        Assert.assertEquals(a, equalsArticle);
     }
 
     @Test
     public void testEquals_NotEqualsByAttributes_GLD() {
         Article notEqualsArticle = new Article(3560070976478L, 1.5, "Not equals");
-        Assert.assertNotEquals(article_GLD, notEqualsArticle);
+        Assert.assertNotEquals(a, notEqualsArticle);
     }
 
     @Test
     public void testEquals_null_GLD() {
-        Assert.assertNotEquals(null, article_GLD);
+        Assert.assertNotEquals(null, a);
     }
 
     @Test
     public void testEquals_same_GLD() {
-        Assert.assertEquals(article_GLD, article_GLD);
+        Assert.assertEquals(a, a);
     }
 
     @Test
     public void testEquals_NotSameType_GLD() {
-        Assert.assertNotEquals(new Object(), article_GLD);
+        Assert.assertNotEquals(new Object(), a);
     }
 
     @Test
     public void testHashCode_GLD() {
-        int hashcode = Long.hashCode(article_GLD.getEAN13());
-        Assert.assertEquals(article_GLD.hashCode(), hashcode);
+        int hashcode = Long.hashCode(a.getEAN13());
+        Assert.assertEquals(a.hashCode(), hashcode);
     }
 
     @Test
