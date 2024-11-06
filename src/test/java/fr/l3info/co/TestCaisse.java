@@ -44,6 +44,9 @@ public class TestCaisse {
     private MaCaisse c;
     private ArticleDB db;
     private Scanette sc;
+    private MaCaisse caisse;
+    private Scanette sc1;
+    private ArticleDB db1;
 
     @Before
     public void setup() throws FileFormatException {
@@ -57,6 +60,11 @@ public class TestCaisse {
         sc = new Scanette(db);
         c = new MaCaisse(db);
         Assert.assertNotEquals(null, c);
+
+        db1 = new ArticleDB();
+        db.init(new File("target/classes/csv/produits_no_errors.csv"));
+        caisse = Mockito.spy(new MaCaisse(db1));
+        sc1 = Mockito.mock(Scanette.class);
     }
 
     @Test
@@ -514,8 +522,241 @@ public class TestCaisse {
         ╚═╝   ╚══════╝╚══════╝   ╚═╝          ╚═╝   ╚═╝  ╚═╝╚══════╝ ╚═════╝     ╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝  ╚═════╝╚═╝  ╚═╝╚══════╝
      */
 
+    @Test
+    public void testConnexionScannerEnAttente_DLR() {
+        Assert.assertEquals(0, caisse.connexion(sc1));
+    }
+
+    @Test
+    public void testConnexionScannerNull_DLR() {
+        Scanette scNull = null;
+        Assert.assertEquals(-1, caisse.connexion(scNull));
+    }
+
+    @Test
+    public void testConnexionCaisseEnAttenteCaissier_DLR() {
+        Assert.assertEquals(0, caisse.connexion(sc1));
+        Assert.assertEquals(-1, caisse.connexion(sc1));
+    }
+
+    @Test
+    public void testConnexionDemandeRelecture_DLR() {
+        Mockito.when(sc1.relectureEffectuee()).thenReturn(false);
+        HashSet<Article> ret = new HashSet<Article>();
+        Article art = new Article(3020120029030L, 1.70, "Cahier Oxford 90 pages petits carreaux");
+        ret.add(art);
+        Mockito.when(sc1.getArticles()).thenReturn(ret);
+
+        Mockito.when(caisse.demandeRelecture()).thenReturn(true);
+
+        Assert.assertEquals(1, caisse.connexion(sc1));
+    }
+
+    @Test
+    public void testConnexionReferencesInconnues_DLR() {
+        HashSet<Long> nr = new HashSet<Long>();
+        nr.add(3020120029030L);
+        Mockito.when(sc1.getReferencesInconnues()).thenReturn(nr);
+
+        Assert.assertEquals(0, caisse.connexion(sc1));
+    }
+
+    @Test
+    public void testPayerCaissePasPrete_DLR() {
+        Assert.assertEquals(0, caisse.connexion(sc1));
+        Assert.assertEquals(-42, caisse.payer(10), 0);
+    }
+
+    /* TODO
+    @Test
+    public void testPayerCaisseSommeExacte_DLR() {
+        Assert.assertEquals(0, caisse.connexion(sc1));
+        Assert.assertEquals(0, caisse.ouvrirSession());
+
+        Assert.assertEquals(0, caisse.scanner(3020120029030L));
+
+        Assert.assertEquals(0, caisse.fermerSession());
+
+        Assert.assertEquals(0, caisse.payer(1.70), 0);
+    }
+
+    @Test
+    public void testPayerCaisseSommeNulle_DLR() {
+        Assert.assertEquals(0, caisse.connexion(sc1));
+        Assert.assertEquals(0, caisse.ouvrirSession());
+
+        Assert.assertEquals(0, caisse.scanner(3020120029030L));
+
+        Assert.assertEquals(0, caisse.fermerSession());
+
+        Assert.assertEquals(-1.70, caisse.payer(0), 0);
+    }
 
 
+    @Test
+    public void testPayerCaisseSommeSuperieure_DLR() {
+        Assert.assertEquals(0, caisse.connexion(sc1));
+        Assert.assertEquals(0, caisse.ouvrirSession());
+
+        Assert.assertEquals(0, caisse.scanner(3020120029030L));
+
+        Assert.assertEquals(0, caisse.fermerSession());
+
+        Assert.assertEquals(10-1.70, caisse.payer(10), 0);
+    }
+     */
+
+    @Test
+    public void testOuvrirSessionInvalide_DLR() {
+        Assert.assertEquals(-1, caisse.ouvrirSession());
+    }
+
+    @Test
+    public void testOuvrirSessionAttenteCaissier_DLR() {
+        Assert.assertEquals(0, caisse.connexion(sc1));
+        Assert.assertEquals(0, caisse.ouvrirSession());
+    }
+
+    /* TODO
+    @Test
+    public void testOuvrirSessionPaiement_DLR() {
+        Assert.assertEquals(0, caisse.connexion(sc1));
+        Assert.assertEquals(0, caisse.ouvrirSession());
+
+        Assert.assertEquals(0, caisse.scanner(3020120029030L));
+
+        Assert.assertEquals(0, caisse.fermerSession());
+
+        Assert.assertEquals(0, caisse.ouvrirSession());
+    }
+    */
+
+    @Test
+    public void testFermerSessionCaisseNonAuthentifiee_DLR() {
+        Assert.assertEquals(-1, caisse.fermerSession());
+    }
+
+    @Test
+    public void testFermerSessionCaisseAuthentifieeAchatsEmpty_DLR() {
+        Assert.assertEquals(0, caisse.connexion(sc1));
+        Assert.assertEquals(0, caisse.ouvrirSession());
+
+        Assert.assertEquals(0, caisse.fermerSession());
+    }
+
+    /* TODO
+    @Test
+    public void testFermerSessionCaisseAuthentifieeAchatsNotEmpty_DLR() {
+        Assert.assertEquals(0, caisse.connexion(sc1));
+        Assert.assertEquals(0, caisse.ouvrirSession());
+
+        Assert.assertEquals(0, caisse.scanner(3020120029030L));
+
+        Assert.assertEquals(0, caisse.fermerSession());
+    }
+    */
+
+    @Test
+    public void testScanCaisseNonAuthentifiee_DLR() {
+        Assert.assertEquals(-1, caisse.scanner(3020120029030L));
+    }
+
+    @Test
+    public void tesScanArticleNonExistant_DLR() {
+        Assert.assertEquals(0, caisse.connexion(sc1));
+        Assert.assertEquals(0, caisse.ouvrirSession());
+
+        Assert.assertEquals(-2, caisse.scanner(3020120029031L));
+    }
+/* TODO
+    @Test
+    public void testScanArticlePresent_DLR() {
+        Assert.assertEquals(0, caisse.connexion(sc1));
+        Assert.assertEquals(0, caisse.ouvrirSession());
+
+        Assert.assertEquals(0, caisse.scanner(3020120029030L));
+    }
+
+    @Test
+    public void testScanArticleDoublon_DLR() {
+        Assert.assertEquals(0, caisse.connexion(sc1));
+        Assert.assertEquals(0, caisse.ouvrirSession());
+
+        Assert.assertEquals(0, caisse.scanner(3020120029030L));
+        Assert.assertEquals(0, caisse.scanner(3020120029030L));
+    }
+    */
+
+    @Test
+    public void testSupprimerCaisseNonAuthentifiee_DLR() {
+        Assert.assertEquals(-1, caisse.supprimer(3020120029030L));
+    }
+
+    @Test
+    public void testSupprimerArticleNonPresentAchatsVide_DLR() {
+        Assert.assertEquals(0, caisse.connexion(sc1));
+        Assert.assertEquals(0, caisse.ouvrirSession());
+
+        Assert.assertEquals(-2, caisse.supprimer(3020120029030L));
+    }
+/* TODO
+    @Test
+    public void testSupprimerArticleNonPresentAchatsRemplis_DLR() {
+        Assert.assertEquals(0, caisse.connexion(sc1));
+        Assert.assertEquals(0, caisse.ouvrirSession());
+
+        Assert.assertEquals(0, caisse.scanner(3020120029030L));
+        Assert.assertEquals(0, caisse.scanner(3245412567216L));
+
+        Assert.assertEquals(-2, caisse.supprimer(3046920010856L));
+    }
+
+    @Test
+    public void testSupprimerArticlePresent_DLR() {
+        Assert.assertEquals(0, caisse.connexion(sc1));
+        Assert.assertEquals(0, caisse.ouvrirSession());
+
+        Assert.assertEquals(0, caisse.scanner(3020120029030L));
+
+        Assert.assertEquals(0, caisse.supprimer(3020120029030L));
+    }
+
+    @Test
+    public void testSupprimerPlusieursFoisArticle_DLR() {
+        Assert.assertEquals(0, caisse.connexion(sc1));
+        Assert.assertEquals(0, caisse.ouvrirSession());
+
+        Assert.assertEquals(0, caisse.scanner(3020120029030L));
+
+        Assert.assertEquals(0, caisse.supprimer(3020120029030L));
+        Assert.assertEquals(-2, caisse.supprimer(3020120029030L));
+    }
+
+    @Test
+    public void testSupprimerArticlePresentPlusieursFois_DLR() {
+        Assert.assertEquals(0, caisse.connexion(sc1));
+        Assert.assertEquals(0, caisse.ouvrirSession());
+
+        Assert.assertEquals(0, caisse.scanner(3020120029030L));
+        Assert.assertEquals(0, caisse.scanner(3020120029030L));
+
+        Assert.assertEquals(0, caisse.supprimer(3020120029030L));
+        Assert.assertEquals(0, caisse.supprimer(3020120029030L));
+    }
+
+    @Test
+    public void testSupprimerArticlePlusieursFoisEnTrop_DLR() {
+        Assert.assertEquals(0, caisse.connexion(sc1));
+        Assert.assertEquals(0, caisse.ouvrirSession());
+
+        Assert.assertEquals(0, caisse.scanner(3020120029030L));
+        Assert.assertEquals(0, caisse.scanner(3020120029030L));
+
+        Assert.assertEquals(0, caisse.supprimer(3020120029030L));
+        Assert.assertEquals(0, caisse.supprimer(3020120029030L));
+        Assert.assertEquals(-2, caisse.supprimer(3020120029030L));
+    }
+*/
 
 
     /* =================== Test Quentin Payet =================*/
