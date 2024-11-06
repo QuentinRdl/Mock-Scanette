@@ -4,9 +4,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 
 /**
@@ -88,6 +86,83 @@ public class TestArticleDB {
         Article notFound = produits.getArticle(-2);
         Assert.assertTrue(notFound == null);
     }
+
+    /* =================== Test Théo Delaroche =================*/
+
+    /* TODO
+    @Test
+    public void testAffichage_DLR() throws FileFormatException {
+        ArticleDB db = new ArticleDB();
+        db.init(new File("target/classes/csv/shortTest.csv"));
+        Assert.assertEquals("5410188006711,2.15,Tropicana Tonic Breakfast\n" +
+                "3560070048786,0.87,Cookies choco\n", db.toString());
+    }
+    */
+
+    @Test
+    public void testPresenceArticleTrue_DLR() throws FileFormatException {
+        ArticleDB db = new ArticleDB();
+        db.init(new File("target/classes/csv/produits_no_errors.csv"));
+        Article article = db.getArticle(3560070976478L);
+        Article article1 = new Article(3560070976478L,1.94,"Poulet satay et son riz");
+        Assert.assertEquals(article, article1);
+    }
+
+    @Test
+    public void testPresenceArticleFalse_DLR() throws FileFormatException {
+        ArticleDB db = new ArticleDB();
+        db.init(new File("target/classes/csv/produits_no_errors.csv"));
+        Article article = db.getArticle(3560070956478L);
+        Assert.assertNull(article);
+    }
+
+    @Test
+    public void testTailleDBShort_DLR() throws FileFormatException {
+        ArticleDB db = new ArticleDB();
+        db.init(new File("target/classes/csv/shortTest.csv"));
+        Assert.assertEquals(2, db.getTailleDB());
+    }
+
+    @Test
+    public void testTailleDBLong_DLR() throws FileFormatException {
+        ArticleDB db = new ArticleDB();
+        db.init(new File("target/classes/csv/produits_no_errors.csv"));
+        Assert.assertEquals(16, db.getTailleDB());
+    }
+
+    @Test
+    // Permet d'avoir un test sur une DB de taille variante
+    public void testTailleDB_DLR() throws FileFormatException, IOException {
+        String fileName = "produits_no_errors.csv";
+        ArticleDB db = new ArticleDB();
+        db.init(new File("target/classes/csv/" + fileName));
+
+        FileReader reader = new FileReader("target/classes/csv/" + fileName);
+        BufferedReader br = new BufferedReader(reader);
+        String line;
+        int count = 0;
+        while ((line = br.readLine()) != null) {
+            ++count;
+        }
+
+        Assert.assertEquals(count, db.getTailleDB());
+    }
+
+    /* TODO
+    @Test
+    public void testTailleZero_DLR() throws FileFormatException {
+        ArticleDB db = new ArticleDB();
+        db.init(new File("target/classes/csv/empty.csv"));
+        Assert.assertEquals(0, db.getTailleDB());
+    }
+
+    @Test(expected=FileFormatException.class)
+    public void testDBErronne_DLR() throws FileFormatException {
+        ArticleDB db = new ArticleDB();
+        db.init(new File("target/classes/csv/produits.csv"));
+        System.out.println(db);
+    }
+     */
 
     /* =================== Test Quentin Payet =================*/
 
