@@ -25,7 +25,6 @@ public class TestArticle {
     @Before     // indicates that the method should be executed before each test
     public void setup() {
         // creation of an object to test
-        a = createArticle(9789059605831l, 1.3, "Cahier 72 pages");
         isNotValid = createArticle(0, 0.0, "");
         isNotValid2 = createArticle(9789059605839l, 1.3, "Cahier 72 pages");
         isNotValid3 = createArticle(9789059605839l, 1.2, "Cahier 72 pages");
