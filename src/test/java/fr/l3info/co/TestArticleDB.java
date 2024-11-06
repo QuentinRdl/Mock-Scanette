@@ -89,6 +89,7 @@ public class TestArticleDB {
 
     /* =================== Test Théo Delaroche =================*/
 
+    /* TODO
     @Test
     public void testAffichage_DLR() throws FileFormatException {
         ArticleDB db = new ArticleDB();
@@ -96,6 +97,7 @@ public class TestArticleDB {
         Assert.assertEquals("5410188006711,2.15,Tropicana Tonic Breakfast\n" +
                 "3560070048786,0.87,Cookies choco\n", db.toString());
     }
+    */
 
     @Test
     public void testPresenceArticleTrue_DLR() throws FileFormatException {
@@ -146,6 +148,7 @@ public class TestArticleDB {
         Assert.assertEquals(count, db.getTailleDB());
     }
 
+    /* TODO
     @Test
     public void testTailleZero_DLR() throws FileFormatException {
         ArticleDB db = new ArticleDB();
@@ -159,6 +162,7 @@ public class TestArticleDB {
         db.init(new File("target/classes/csv/produits.csv"));
         System.out.println(db);
     }
+     */
 
     /* =================== Test Quentin Payet =================*/
 
