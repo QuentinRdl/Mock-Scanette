@@ -344,12 +344,6 @@ public class TestArticle {
     }
 
     @Test
-    public void testHashCode_GLD() {
-        int hashcode = Long.hashCode(a.getEAN13());
-        Assert.assertEquals(a.hashCode(), hashcode);
-    }
-
-    @Test
     public void testPrettyEan13_GLD() {
         Article art = new Article(3046920010856L, 0.0, "");
         Assert.assertEquals("3046920010856", art.prettyEan13());

@@ -94,21 +94,11 @@ public class Article {
         Article arO = (Article) (o);
         return this.ean13 == arO.getEAN13();
 
-        /*
-        if(o == this) return true;
-        if(o == null) return false;
-        if(o instanceof Article) {
-            Article isEqual = (Article) o;
-            if(this.getEAN13() != isEqual.getEAN13()) return false;
-            if(!Objects.equals(this.getNom(), isEqual.getNom())) return false;
-            return this.getPrixUnitaire() == isEqual.getPrixUnitaire();
-        }
-        return false;*/
     }
 
     @Override
     public int hashCode() {
-        return Long.hashCode(ean13);
+        return this.isValidEAN13() ?  String.valueOf(ean13).hashCode() : 0;
     }
 
     public String prettyEan13() {

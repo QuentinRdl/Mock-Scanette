@@ -897,6 +897,38 @@ public class TestCaisse {
          c.abandon();
          Assert.assertEquals(0, c.connexion(sc));
      }
+
+    @Test
+    public  void testAbandonPanierNonVide() {
+
+        Set<Article> s = new HashSet<Article>();
+        s.add(db.getArticle(3017620402678l));
+        s.add(db.getArticle(3560071097424l));
+
+        Scanette mockScannette = Mockito.mock(Scanette.class);
+        Mockito.when(mockScannette.getArticles()).thenReturn(s);
+
+        c.connexion((mockScannette));
+
+        c.abandon();
+        Assert.assertEquals(0, c.connexion(sc));
+    }
+
+    @Test
+    public  void testAbandonTransactionEnCours() {
+
+        Set<Article> s = new HashSet<Article>();
+        s.add(db.getArticle(3017620402678l));
+        s.add(db.getArticle(3560071097424l));
+
+        Scanette mockScannette = Mockito.mock(Scanette.class);
+        Mockito.when(mockScannette.getArticles()).thenReturn(s);
+
+        c.connexion((mockScannette));
+        c.payer(10.0);
+        c.abandon();
+        Assert.assertEquals(0, c.connexion(sc));
+    }
  
      @Test
      public  void testPayerEtatCaissePayementAvecRendu() {
@@ -968,7 +1000,26 @@ public class TestCaisse {
          c.connexion(mockScannette);
          Assert.assertTrue( c.payer(1) < 0.0);
      }
- 
+
+
+
+    @Test
+    public  void testPayerSommeNegative() {
+
+        Set<Article> s = new HashSet<Article>();
+        s.add(db.getArticle(3017620402678l));
+        s.add(db.getArticle(3560071097424l));
+
+        Scanette mockScannette = Mockito.mock(Scanette.class);
+
+        Mockito.when(mockScannette.getArticles()).thenReturn(s);
+        Mockito.when(mockScannette.quantite(3017620402678l)).thenReturn(1);
+        Mockito.when(mockScannette.quantite(3560071097424l)).thenReturn(1);
+        Mockito.when(mockScannette.relectureEffectuee()).thenReturn(true);
+
+        c.connexion(mockScannette);
+        Assert.assertTrue( c.payer(-1) < 0.0);
+    }
  
  
      @Test
@@ -1031,7 +1082,23 @@ public class TestCaisse {
          Assert.assertEquals(0, c.ouvrirSession());
          Assert.assertEquals(-1, c.ouvrirSession());
      }
- 
+
+    @Test
+    public  void testOuvrirSessionFermerAuPrealable() {
+        // Code inconnues
+        Set<Long> s = new HashSet<Long>();
+        s.add(4463487097622l);
+        s.add(2123201259812l);
+        s.add(1190623242310l);
+
+        Scanette mockScannette = Mockito.mock(Scanette.class);
+        Mockito.when(mockScannette.getReferencesInconnues()).thenReturn(s);
+        Mockito.when(mockScannette.relectureEffectuee()).thenReturn(true);
+
+        c.connexion(mockScannette);
+        Assert.assertEquals(0, c.ouvrirSession());
+        Assert.assertEquals(0, c.fermerSession());
+    }
  
      @Test
      public  void testFermerSessionCaissierAuthentifiéPanierNonVide() {
@@ -1297,6 +1364,39 @@ public class TestCaisse {
          c.ouvrirSession();
          Assert.assertEquals(0, c.supprimer(3017620402678l));
      }
+
+    @Test
+    public  void testDemandeRelectureTHRESHOLDZero() {
+
+        c.THRESHOLD = 0.0;
+        for (int i = 0; i < 1000; i++) {
+            Assert.assertFalse( c.demandeRelecture());
+        }
+    }
+
+    @Test
+    public  void testDemandeRelectureTHRESHOLDUn() {
+        c.THRESHOLD = 1.0;
+        for (int i = 0; i < 1000; i++) {
+            Assert.assertTrue( c.demandeRelecture());
+        }
+    }
+
+    @Test
+    public  void testDemandeRelectureTHRESHOLDCinquanteCiquante() {
+        c.THRESHOLD = 0.5;
+        int trueCount = 0;
+        int falseCount = 0;
+        for (int i = 0; i < 1000; i++) {
+            if (c.demandeRelecture()) {
+                trueCount++;
+            } else {
+                falseCount++;
+            }
+        }
+        Assert.assertTrue(Math.abs(trueCount - 500) < 100);
+        Assert.assertTrue( Math.abs(falseCount - 500) < 100);
+    }
 
      /* --- TESTS - GALLAND Romain --- */
 

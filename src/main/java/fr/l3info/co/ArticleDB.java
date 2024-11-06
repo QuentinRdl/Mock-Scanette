@@ -37,7 +37,7 @@ public class ArticleDB {
 
                 Article articleToWrite = new Article(Long.parseLong(theLine[0]), Double.parseDouble(theLine[1]), theLine[2]);
 
-                if ((!articleToWrite.isValidEAN13()) || articleToWrite.getPrixUnitaire() < 0 || articleToWrite.getNom().trim().isEmpty()) {
+                if ((!articleToWrite.isValidEAN13()) || articleToWrite.getPrixUnitaire() < 0 ) {
                     throw  new FileFormatException(initFile);
                 }
 
