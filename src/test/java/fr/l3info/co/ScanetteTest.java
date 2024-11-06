@@ -414,7 +414,90 @@ public class ScanetteTest {
 
     /* =================== Test Theo Delaroche =================*/
 
+    @Test
+    public void testDebloquerDouble_DLR() {
+        Assert.assertEquals(0, sc.debloquer());
+        Assert.assertEquals(-1, sc.debloquer());
+    }
 
+    @Test
+    public void testDebloquer_DLR() {
+        Assert.assertEquals(0, sc.debloquer());
+    }
+
+    @Test
+    public void testScannerArticlePresent_DLR() {
+        sc.debloquer();
+        Assert.assertEquals(0, sc.scanner(5410188006711L));
+    }
+
+    @Test
+    public void testScannerArticleNonPresent_DLR() {
+        sc.debloquer();
+        Assert.assertEquals(-2, sc.scanner(3560071097423L));
+    }
+
+    /* TODO
+    @Test
+    public void testSuppressionArticlePresent_DLR() {
+        sc.debloquer();
+        sc.scanner(3020120029030L);
+        Assert.assertEquals(0, sc.supprimer(3020120029030L));
+    }
+
+    @Test
+    public void testSuppressionArticlePresentMultiple_DLR() {
+        sc.debloquer();
+        sc.scanner(3020120029030L);
+        sc.scanner(3020120029030L);
+        Assert.assertEquals(0, sc.supprimer(3020120029030L));
+        Assert.assertEquals(1, sc.quantite(3020120029030L));
+    }
+     */
+
+    @Test
+    public void testSuppressionArticlePasPresent_DLR() {
+        sc.debloquer();
+        Assert.assertEquals(-2, sc.supprimer(3020120029030L));
+    }
+
+    @Test
+    public void testSuppressionScanetteBloquee_DLR() {
+        sc.debloquer();
+        sc.abandon();
+        Assert.assertEquals(-1, sc.supprimer(3020120029030L));
+    }
+
+    /* TODO
+    @Test
+    public void testQuantite1Fois_DLR() {
+        sc.debloquer();
+        sc.scanner(3020120029030L);
+        Assert.assertEquals(1, sc.quantite(3020120029030L));
+    }
+
+    @Test
+    public void testQuantite10Fois_DLR() {
+        sc.debloquer();
+        for (int i=0; i<10; i++) {
+            sc.scanner(3020120029030L);
+        }
+        Assert.assertEquals(10, sc.quantite(3020120029030L));
+    }
+     */
+
+    @Test
+    public void testQuantite0Fois_DLR() {
+        sc.debloquer();
+        Assert.assertEquals(0, sc.quantite(3020120029030L));
+    }
+
+    @Test
+    public void testAbandon_DLR() {
+        sc.debloquer();
+        sc.abandon();
+        Assert.assertEquals(-1, sc.scanner(3560071097423L));
+    }
 
     /* =================== Test Quentin Payet =================*/
 
